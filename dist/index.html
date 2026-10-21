@@ -15,7 +15,7 @@
   </header>
   <div class="workspace">
     <aside class="library" aria-label="Diagram presets">
-      <div class="section-label">THE COLLECTION <span>06</span></div>
+      <div class="section-label">THE COLLECTION <span id="collection-count">07</span></div>
       <nav id="presets" aria-label="Choose a diagram"></nav>
       <div class="library-note"><span class="little-asterisk">✳</span><p>Good ideas rarely<br>travel in straight lines.</p><span class="mono">MAKE A LITTLE SPACE.</span></div>
       <a class="source-link" href="https://github.com/cathrynlavery/diagram-design" target="_blank" rel="noreferrer">Style by Diagram Design ↗</a>
@@ -33,6 +33,7 @@
         <label class="speed-label"><span class="sr-only">Playback speed</span><select id="speed"><option value="0.5">0.5×</option><option value="1" selected>1× speed</option><option value="1.5">1.5×</option><option value="2">2×</option></select></label>
       </section>
       <p class="diagram-description" id="description"></p>
+      <p id="primitive-note" class="primitive-note" hidden>COMPOSITION PRIMITIVES <span>Merge junction</span><span>Labeled connection</span><span>Model container</span><span>Multiline node</span></p>
     </main>
     <aside class="inspector" aria-label="Diagram controls">
       <section class="inspector-section"><div class="section-label">BRING IT TO LIFE <span>↗</span></div><h2>A little motion.</h2><p class="help">Give your connections a rhythm.</p>
@@ -42,8 +43,8 @@
         <label class="toggle-row"><span>Dotted paper</span><input id="dots" type="checkbox" checked role="switch"></label>
       </section>
       <section class="inspector-section node-section"><div class="section-label">THE SELECTED IDEA <span class="selection-dot"></span></div><div class="selected-heading"><h2 id="selected-title">An idea</h2><span id="selected-id" class="mono">N0</span></div>
-        <label class="field-title" for="node-label">Name</label><input id="node-label" maxlength="22" type="text" autocomplete="off">
-        <label class="field-title" for="node-subtitle">A small detail</label><input id="node-subtitle" maxlength="26" type="text" autocomplete="off">
+        <label class="field-title" for="node-label">Name</label><input id="node-label" maxlength="40" type="text" autocomplete="off">
+        <label class="field-title" for="node-subtitle">Details · one line per thought</label><textarea id="node-subtitle" maxlength="120" rows="3" autocomplete="off"></textarea>
         <div class="branch-label"><label class="field-title" for="branch-count">New branches</label><select id="branch-count"><option value="1">1 branch</option><option value="2" selected>2 branches</option><option value="3">3 branches</option></select></div>
         <button id="grow" class="grow-button">Grow branches <span aria-hidden="true">↗</span></button><p class="help grow-help">Connections reach out.<br>New possibilities take shape.</p>
         <div class="edit-actions"><button id="undo" class="text-button" disabled>↶ Undo</button><button id="remove" class="text-button" disabled>Remove branch</button></div>

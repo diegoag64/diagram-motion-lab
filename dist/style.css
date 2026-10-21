@@ -136,3 +136,37 @@ input[type=text] { width:100%; min-width:0; border:1px solid var(--rule); border
 @media(max-width:640px) { .app-header { height:72px; padding:0 18px; gap:8px; } .brand { font-size:20px; gap:9px; } .brand-mark { font-size:40px; } .header-right { gap:5px; } .button { font-size:10px; padding:8px; } .button span { margin-left:3px; } .workspace { display:flex; flex-direction:column; } .library { padding:16px 16px 8px; border-right:0; border-bottom:1px solid var(--rule); } .library>.section-label,.library-note,.source-link,.preset-preview { display:none; } #presets { grid-template-columns:repeat(2,minmax(0,1fr)); gap:5px; } .preset { padding:9px 10px; } .preset-head { font-size:11px; gap:6px; } .main { padding:26px 16px; } .intro { margin-bottom:22px; } h1 { font-size:39px; } .canvas { height:410px; } .canvas-bottom { padding:10px; } .canvas-hint { font-size:9px; max-width:150px; } .transport { gap:10px; } .timeline-meta { font-size:8px; letter-spacing:0; } .speed-label select { font-size:10px; padding:4px; } .inspector { display:grid; grid-template-columns:1fr; } .inspector-section:first-child { border-right:0; } .mode-buttons button { flex-direction:row; justify-content:center; gap:9px; } .app-footer { padding:16px; font-size:8px; flex-wrap:wrap; gap:10px; } .grow-help br { display:none; } }
 @media(prefers-reduced-motion:reduce) { *,*::before,*::after { transition:none!important; scroll-behavior:auto!important; } }
 @media(pointer:coarse) { .zoom-controls button { width:40px;height:40px; } .text-button { min-height:36px; } .icon-button { min-width:40px;min-height:40px; } }
+
+/* Composition primitives: containment, junctions, and readable explanatory text. */
+.group-box { fill:var(--paper); stroke:var(--rule); stroke-width:1; }
+.diagram-group.focal .group-box { fill:var(--accent-tint); stroke:var(--accent); }
+.group-eyebrow { fill:var(--muted); font:500 9px var(--mono); letter-spacing:.14em; }
+.diagram-group.focal .group-eyebrow { fill:var(--accent); }
+.group-title { fill:var(--ink); font:400 22px var(--serif); }
+.junction { cursor:default; }
+.junction-dot { fill:var(--muted); stroke:var(--canvas); stroke-width:2; }
+.multiline .node-name { font-size:15px; font-weight:500; }
+.multiline .node-subtitle { font:400 13px var(--sans); }
+.edge-label { pointer-events:none; }
+.edge-label text { fill:var(--muted); font:400 12px var(--mono); }
+.edge-label-mask { fill:var(--canvas); }
+textarea { width:100%; resize:vertical; min-height:74px; max-height:160px; padding:10px 11px; border:1px solid var(--rule); border-radius:4px; color:var(--ink); background:var(--paper); font:400 12px/1.6 var(--sans); }
+.primitive-note { display:flex; align-items:center; flex-wrap:wrap; gap:8px 16px; margin-top:22px; color:var(--soft); font:400 9px var(--mono); letter-spacing:.04em; }
+.primitive-note[hidden] { display:none; }
+.primitive-note span { color:var(--muted); font:400 11px var(--sans); letter-spacing:0; }
+@media(min-width:961px) {
+  .workspace.wide-diagram { grid-template-columns:200px minmax(0,1fr); }
+  .wide-diagram .library { grid-row:1/3; }
+  .wide-diagram .inspector { grid-column:2; display:grid; grid-template-columns:1fr 1fr; border-left:0; border-top:1px solid var(--rule); }
+  .wide-diagram .inspector-section:first-child { border-right:1px solid var(--rule); }
+  .wide-diagram .palette-section { display:none; }
+  .wide-diagram .canvas { height:380px; }
+  .wide-diagram .node-section { display:grid; grid-template-columns:1fr 1fr; gap:0 16px; }
+  .wide-diagram .node-section>.section-label,.wide-diagram .selected-heading,.wide-diagram .edit-actions { grid-column:1/-1; }
+  .wide-diagram .node-section .field-title { margin-top:10px; }
+  .wide-diagram .node-section>label { grid-column:1; }
+  .wide-diagram .node-section>input,.wide-diagram .node-section>textarea { grid-column:1; }
+  .wide-diagram .branch-label { grid-column:2; grid-row:3; margin-top:10px; }
+  .wide-diagram .grow-button { grid-column:2; grid-row:4; margin:0; align-self:start; }
+  .wide-diagram .grow-help { grid-column:2; grid-row:5/7; }
+}

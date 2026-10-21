@@ -12,7 +12,7 @@ Open http://127.0.0.1:4178. `npm test` checks graph editing and layout contracts
 
 ## Playground
 
-- Six starting diagrams: branching ideas, pipeline, parallel fan-out, feedback loop, architecture, and a blank starting point.
+- Seven starting diagrams: branching ideas, pipeline, parallel fan-out, feedback loop, architecture, a blank starting point, and the Jev request/response composition (`?preset=jev`).
 - Select a node to rename it, edit its detail, or spawn one to three branches. Branches can themselves spawn more branches.
 - Signal, stream, and trace connection effects; independent flow speed and playback speed.
 - Replay and scrub the growth sequence. Pause freezes the animation clock. Drag empty canvas to pan; zoom or fit with the canvas controls.
@@ -28,6 +28,19 @@ Open http://127.0.0.1:4178. `npm test` checks graph editing and layout contracts
 - `dist/style.css`: extracted/adapted visual tokens and responsive application layout.
 
 To add a concept, add a preset to `PRESETS`. To add a motion treatment, extend the renderer's connection modes. Node `born` times currently drive the reveal sequence; a future scene/event track can add collapse, reparent, and narrative states without replacing the graph model.
+
+## Composition primitives
+
+The Jev preset recreates a supplied reference as editable SVG, using reusable schema fields:
+
+- **Multiline nodes:** `width`, `height`, and newline-separated `subtitle` support explanatory cards. Details can be edited in the inspector, up to four lines.
+- **Merge junction:** `kind: 'junction'` creates a point connection without a box. Multiple incoming edges meet at exactly the same point; `arrow: false` removes their arrowheads.
+- **Named containers:** `groups: [{id, label, eyebrow, members, focal}]` draws a labeled boundary around member nodes. Its bounds follow the members, with room reserved for its title.
+- **Boundary connections:** edge `fromGroup` / `toGroup` connects to a container boundary while retaining semantic `from` / `to` node IDs for ordering and animation.
+- **Edge annotations:** `label` draws a readable label alongside a connector with a paper-colored backing. Compact layouts place annotations beside vertical connections.
+- **Authored composition:** `layoutMode: 'authored'` uses each node's `position` and `compactPosition` to preserve a specific explanatory layout. It supports multiple input roots and remains editable; new branches are placed in open space below the composition.
+
+The Jev view makes the canvas wider and moves the inspector below it. Containers, labels, multiline text, and junctions are included in complete static SVG exports. Exported text uses portable fonts with preserved text widths. This is an explanatory diagram, with no Jev service integration or live model calls.
 
 The canvas is capped at 40 nodes to keep it useful for explaining concepts. Automatic layout follows a left-to-right tree on desktop and a vertical tree on compact canvases; arbitrary cyclic graph layout and drag-to-reposition nodes are not implemented. Compact canvases start at a readable zoom; use pan to explore or Fit to see the entire diagram.
 
