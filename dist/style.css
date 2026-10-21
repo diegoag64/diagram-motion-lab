@@ -138,6 +138,9 @@ input[type=text] { width:100%; min-width:0; border:1px solid var(--rule); border
 @media(pointer:coarse) { .zoom-controls button { width:40px;height:40px; } .text-button { min-height:36px; } .icon-button { min-width:40px;min-height:40px; } }
 
 /* Composition primitives: containment, junctions, and readable explanatory text. */
+/* Jev's reference color stays consistent across light and dark diagrams. */
+svg[data-preset=jev] { --accent:#E551BA; --accent-tint:color-mix(in srgb, #E551BA 12%, var(--paper)); }
+svg[data-preset=jev] .junction-dot { fill:var(--accent); }
 .group-box { fill:var(--paper); stroke:var(--rule); stroke-width:1; }
 .diagram-group.focal .group-box { fill:var(--accent-tint); stroke:var(--accent); }
 .group-eyebrow { fill:var(--muted); font:500 9px var(--mono); letter-spacing:.14em; }

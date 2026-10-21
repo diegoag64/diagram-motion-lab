@@ -18,6 +18,7 @@ export class Renderer {
     svg.addEventListener('wheel',e=>{if(e.ctrlKey||e.metaKey){e.preventDefault();this.zoom(e.deltaY<0?1.1:1/1.1);}}, {passive:false});
   }
   setGraph(graph,selected,{instant=false}={}) {
+    this.svg.dataset.preset=graph.preset;
     this.graph=graph;this.selected=selected;this.vertical=this.svg.clientWidth<450;
     this.starts=new Map(this.positions);this.targets=layout(graph,this.vertical);this.layoutStart=performance.now();
     for(const n of graph.nodes)if(!this.starts.has(n.id))this.starts.set(n.id,this.targets.get(n.id));
