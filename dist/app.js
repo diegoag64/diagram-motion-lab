@@ -1,15 +1,9 @@
+import {CARD_THEMES} from './card-themes.js';
 import {PRESETS,createGraph,duration,clone,grow,removeBranch,MAX_NODES} from './model.js';
 import {Renderer} from './renderer.js';
 const $=id=>document.getElementById(id);
 const STORAGE='diagram-motion-lab-v1';
-const CARD_THEMES=[
-  {id:'baseline',name:'Baseline',description:'Just the essentials: open surfaces and crisp, rounded outlines.'},
-  {id:'slate',name:'Slate',description:'Slate surfaces, fine borders, and quiet editorial type.'},
-  {id:'soft',name:'Soft',description:'Gentle tinted cushions with generous curves and no hard borders.'},
-  {id:'neon',name:'Neon',description:'Luminous accent edges with a subtle glow, like signals on a dark display.'},
-  {id:'offset',name:'Offset',description:'Bold, square-edged cards with a solid offset shadow and print-like weight.'},
-  {id:'terminal',name:'Terminal',description:'Technical panels with dashed edges, monospace labels, and precise corners.'}
-];
+
 const reduced=matchMedia('(prefers-reduced-motion: reduce)');
 let graph=createGraph('branches'),selected='n0',time=0,flowTime=0,playing=!reduced.matches,speed=1,flowSpeed=1,mode='signal',flowEnabled=true,history=[],toastTimer;
 let saved={};

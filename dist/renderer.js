@@ -5,17 +5,20 @@ const smooth=v=>1-Math.pow(1-clamp(v),3);
 function element(tag,attrs={},text) { const e=document.createElementNS(NS,tag); for(const [k,v] of Object.entries(attrs)) e.setAttribute(k,v); if(text!==undefined)e.textContent=text; return e; }
 
 export class Renderer {
-  constructor(svg,onSelect,onZoom) {
+  constructor(svg,onSelect,onZoom,{readOnly=false}={}) {
+    this.readOnly=readOnly;
     this.svg=svg;this.nodeLayer=svg.querySelector('#node-layer');this.edgeLayer=svg.querySelector('#edge-layer');
     this.groupLayer=element('g',{id:'group-layer'});svg.insertBefore(this.groupLayer,this.edgeLayer);
     this.labelLayer=element('g',{id:'label-layer'});svg.append(this.labelLayer);
     this.onSelect=onSelect;this.onZoom=onZoom;this.nodes=new Map();this.edges=new Map();this.groups=new Map();this.positions=new Map();this.targets=new Map();this.camera={x:0,y:0,scale:1};this.reduced=false;
-    this.observer=new ResizeObserver(()=>{if(this.graph){const vertical=this.svg.clientWidth<450;if(vertical!==this.vertical)this.setGraph(this.graph,this.selected,{instant:true});this.fit();}});this.observer.observe(svg);
+    this.observer=new ResizeObserver(()=>{if(this.graph&&this.svg.clientWidth>0){const vertical=this.svg.clientWidth<450;if(vertical!==this.vertical)this.setGraph(this.graph,this.selected,{instant:true});this.fit(!this.readOnly);}});this.observer.observe(svg);
+    if(!readOnly) {
     let drag=null;
     svg.addEventListener('pointerdown',e=>{if(e.target.closest('.diagram-node:not(.junction)'))return;drag={x:e.clientX,y:e.clientY,cam:{...this.camera}};svg.setPointerCapture(e.pointerId);svg.classList.add('panning');});
     svg.addEventListener('pointermove',e=>{if(!drag)return;this.camera.x=drag.cam.x-(e.clientX-drag.x)/this.camera.scale;this.camera.y=drag.cam.y-(e.clientY-drag.y)/this.camera.scale;this.applyCamera();});
     const end=()=>{drag=null;svg.classList.remove('panning');};svg.addEventListener('pointerup',end);svg.addEventListener('pointercancel',end);
     svg.addEventListener('wheel',e=>{if(e.ctrlKey||e.metaKey){e.preventDefault();this.zoom(e.deltaY<0?1.1:1/1.1);}}, {passive:false});
+    }
   }
   setGraph(graph,selected,{instant=false}={}) {
     this.svg.dataset.preset=graph.preset;
@@ -44,10 +47,10 @@ export class Renderer {
       const g=element('g',{class:`diagram-node ${junction?'junction':''} ${n.focal?'focal':''} ${n.id===selected?'selected':''}`,'data-node':n.id});
       if(junction){g.setAttribute('role','img');g.setAttribute('aria-label',n.label);g.append(element('circle',{class:'junction-dot',r:4}));}
       else {
-        g.setAttribute('role','button');g.setAttribute('tabindex','0');g.setAttribute('aria-pressed',String(n.id===selected));
+        if(!this.readOnly){g.setAttribute('role','button');g.setAttribute('tabindex','0');g.setAttribute('aria-pressed',String(n.id===selected));}
         const {width,height}=nodeSize(n);
         g.append(element('rect',{class:'selection-ring',x:-5,y:-5,width:width+10,height:height+10,rx:10}),element('rect',{class:'node-box',width,height,rx:6}),element('text',{class:'node-index',x:12,y:16},String(graph.nodes.slice(0,i+1).filter(n=>n.kind!=='junction').length).padStart(2,'0')),element('text',{class:'node-name','text-anchor':'middle'}),element('text',{class:'node-subtitle','text-anchor':'middle'}));
-        g.addEventListener('click',()=>this.onSelect(n.id));g.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();this.onSelect(n.id);}});
+        if(!this.readOnly){g.addEventListener('click',()=>this.onSelect(n.id));g.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();this.onSelect(n.id);}});}
       }
       this.nodeLayer.append(g);this.nodes.set(n.id,g);this.updateLabel(n);
     });
@@ -62,7 +65,7 @@ export class Renderer {
     const lineHeight=multiline?21:16,total=20+lines.length*lineHeight,start=Math.max(35,(height-total)/2+15);
     title.textContent=node.label;title.setAttribute('x',width/2);title.setAttribute('y',multiline?start:37);
     detail.replaceChildren();lines.forEach((line,i)=>detail.append(element('tspan',{x:width/2,y:multiline?start+27+i*lineHeight:56+i*lineHeight},line)));
-    g.setAttribute('aria-label',`${node.label}. ${node.subtitle.replaceAll('\n',', ')}. Select to edit or grow branches.`);
+    g.setAttribute('aria-label',`${node.label}. ${node.subtitle.replaceAll('\n',', ')}.${this.readOnly?'':' Select to edit or grow branches.'}`);
     this.fitLabel(title,width-24);for(const line of detail.children)this.fitLabel(line,width-24);
   }
   fitLabel(text,width=132) {let shortened=text.textContent;while(text.getComputedTextLength()>width&&shortened.length>1){shortened=shortened.slice(0,-1);text.textContent=shortened+'…';}}
@@ -84,7 +87,7 @@ export class Renderer {
   render(time,flowTime,mode,flowEnabled,now=performance.now()) {
     if(!this.graph)return;
     const progress=this.reduced?1:smooth((now-this.layoutStart)/700),nodeMap=new Map(this.graph.nodes.map(n=>[n.id,n]));
-    for(const n of this.graph.nodes){const a=this.starts.get(n.id),b=this.targets.get(n.id),p={x:a.x+(b.x-a.x)*progress,y:a.y+(b.y-a.y)*progress};this.positions.set(n.id,p);const visible=this.reduced?1:smooth((time-n.born)/.5),node=this.nodes.get(n.id);node.setAttribute('transform',`translate(${p.x},${p.y+(n.kind==='junction'?0:(1-visible)*10)})`);node.setAttribute('opacity',visible);node.style.pointerEvents=visible>.5&&n.kind!=='junction'?'auto':'none';if(n.kind!=='junction')node.setAttribute('tabindex',visible>.5?'0':'-1');node.setAttribute('aria-hidden',String(visible<=.5));}
+    for(const n of this.graph.nodes){const a=this.starts.get(n.id),b=this.targets.get(n.id),p={x:a.x+(b.x-a.x)*progress,y:a.y+(b.y-a.y)*progress};this.positions.set(n.id,p);const visible=this.reduced?1:smooth((time-n.born)/.5),node=this.nodes.get(n.id);node.setAttribute('transform',`translate(${p.x},${p.y+(n.kind==='junction'?0:(1-visible)*10)})`);node.setAttribute('opacity',visible);node.style.pointerEvents=!this.readOnly&&visible>.5&&n.kind!=='junction'?'auto':'none';if(n.kind!=='junction'&&!this.readOnly)node.setAttribute('tabindex',visible>.5?'0':'-1');node.setAttribute('aria-hidden',String(visible<=.5));}
     this.updateGroups(this.positions,time);this.positionEdgeLabels(this.positions);
     for(const e of this.graph.edges){
       const geo=connectionGeometry(this.graph,this.positions,e,this.vertical),dom=this.edges.get(e.id),birth=Math.max(nodeMap.get(e.to).born,nodeMap.get(e.from).born),reveal=this.reduced?1:clamp((time-birth+.4)/.55);

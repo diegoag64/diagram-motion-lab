@@ -58,19 +58,7 @@ h1 { font:400 clamp(35px,3.3vw,49px)/1.08 var(--serif); letter-spacing:-.025em; 
 .canvas.no-dots { background-image:none; }
 #diagram { width:100%; height:100%; display:block; cursor:grab; user-select:none; }
 #diagram.panning { cursor:grabbing; }
-.diagram-node { cursor:pointer; }
-.node-box { fill:var(--surface); stroke:var(--muted); stroke-width:.9; }
-.diagram-node.focal .node-box { fill:var(--accent-tint); stroke:var(--accent); }
-.selection-ring { fill:none; stroke:var(--accent); stroke-width:1; stroke-dasharray:3 4; opacity:0; }
-.diagram-node.selected .selection-ring { opacity:.6; }
 .diagram-node:hover .node-box { stroke:var(--accent); }
-.node-name { fill:var(--ink); font:500 13px var(--sans); }
-.node-subtitle { fill:var(--muted); font:400 9px var(--mono); }
-.node-index { fill:var(--soft); font:400 8px var(--mono); letter-spacing:1px; }
-.edge-base { stroke:var(--muted); stroke-width:1; opacity:.7; fill:none; }
-.edge-flow { stroke:var(--accent); stroke-width:2; fill:none; stroke-linecap:round; }
-.flow-particle { fill:var(--accent); }
-.feedback-label { font:400 9px var(--mono); fill:var(--muted); }
 .canvas-bottom { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; gap:12px; }
 .canvas-hint { color:var(--soft); font-size:10px; }
 .canvas-hint>span { padding:0 5px; }
@@ -139,20 +127,6 @@ input[type=text] { width:100%; min-width:0; border:1px solid var(--rule); border
 
 /* Composition primitives: containment, junctions, and readable explanatory text. */
 /* Jev's reference color stays consistent across light and dark diagrams. */
-svg[data-preset=jev],.card-studio[data-preset=jev] { --accent:#E551BA; --accent-tint:color-mix(in srgb, #E551BA 12%, var(--paper)); }
-svg[data-preset=jev] .junction-dot { fill:var(--accent); }
-.group-box { fill:var(--paper); stroke:var(--rule); stroke-width:1; }
-.diagram-group.focal .group-box { fill:var(--accent-tint); stroke:var(--accent); }
-.group-eyebrow { fill:var(--muted); font:500 9px var(--mono); letter-spacing:.14em; }
-.diagram-group.focal .group-eyebrow { fill:var(--accent); }
-.group-title { fill:var(--ink); font:400 22px var(--serif); }
-.junction { cursor:default; }
-.junction-dot { fill:var(--muted); stroke:var(--canvas); stroke-width:2; }
-.multiline .node-name { font-size:15px; font-weight:500; }
-.multiline .node-subtitle { font:400 13px var(--sans); }
-.edge-label { pointer-events:none; }
-.edge-label text { fill:var(--muted); font:400 12px var(--mono); }
-.edge-label-mask { fill:var(--canvas); }
 textarea { width:100%; resize:vertical; min-height:74px; max-height:160px; padding:10px 11px; border:1px solid var(--rule); border-radius:4px; color:var(--ink); background:var(--paper); font:400 12px/1.6 var(--sans); }
 /* Card explorations share tokens with their previews; Slate keeps the original filled-card rules. */
 .card-studio { margin:0 0 22px; }
@@ -163,18 +137,6 @@ textarea { width:100%; resize:vertical; min-height:74px; max-height:160px; paddi
 #card-themes button:hover { border-color:var(--accent); }
 .card-sample { display:grid; place-items:center; width:52px; height:31px; background:var(--card-fill,var(--surface)); border:var(--card-stroke-width,1px) var(--card-border-style,solid) var(--card-stroke,var(--muted)); border-radius:var(--card-radius,6px); filter:var(--card-filter,none); color:var(--ink); font:500 14px var(--card-font,var(--sans)); }
 #card-theme-description { margin-top:10px; min-height:36px; }
-[data-card-theme=baseline],[data-card-style=baseline] { --card-fill:var(--canvas); --card-stroke:var(--ink); --card-stroke-width:1.3px; --card-radius:14px; }
-[data-card-theme=soft],[data-card-style=soft] { --card-fill:color-mix(in srgb,var(--accent) 15%,var(--canvas)); --card-stroke:transparent; --card-stroke-width:0px; --card-radius:22px; }
-[data-card-theme=neon],[data-card-style=neon] { --card-fill:var(--canvas); --card-stroke:var(--accent); --card-stroke-width:1.5px; --card-radius:9px; --card-filter:drop-shadow(0 0 5px color-mix(in srgb,var(--accent) 45%,transparent)); }
-[data-card-theme=offset],[data-card-style=offset] { --card-fill:var(--canvas); --card-stroke:var(--ink); --card-stroke-width:2px; --card-radius:0px; --card-filter:drop-shadow(4px 4px 0 var(--accent)); }
-[data-card-theme=terminal],[data-card-style=terminal] { --card-fill:var(--canvas); --card-stroke:var(--muted); --card-stroke-width:1px; --card-radius:2px; --card-dash:5 3; --card-border-style:dashed; --card-font:var(--mono); }
-svg[data-card-theme]:not([data-card-theme=slate]) .diagram-node .node-box { fill:var(--card-fill); stroke:var(--card-stroke); stroke-width:var(--card-stroke-width); rx:var(--card-radius); ry:var(--card-radius); filter:var(--card-filter,none); stroke-dasharray:var(--card-dash,none); }
-svg[data-card-theme]:not([data-card-theme=slate]) .selection-ring { rx:var(--card-radius); ry:var(--card-radius); }
-svg[data-card-theme]:not([data-card-theme=slate]) .diagram-node.focal .node-box { fill:color-mix(in srgb,var(--accent) 22%,var(--canvas)); }
-svg[data-card-theme]:not([data-card-theme=slate]) .diagram-node:hover .node-box { stroke:var(--accent); }
-svg[data-card-theme=offset] .node-name { font-weight:600; }
-svg[data-card-theme=terminal] .node-name,svg[data-card-theme=terminal] .node-subtitle { font-family:var(--mono); }
-svg[data-card-theme=terminal] .node-index,svg[data-card-theme=neon] .node-index { fill:var(--accent); }
 @media(min-width:961px) and (max-width:1400px) { .workspace:not(.wide-diagram) #card-themes { grid-template-columns:repeat(3,minmax(0,1fr)); } }
 @media(max-width:800px) { #card-themes { grid-template-columns:repeat(3,minmax(0,1fr)); } .card-studio>.section-label { gap:12px; font-size:9px; } .card-studio>.section-label>span { font-size:8px; } }
 .primitive-note { display:flex; align-items:center; flex-wrap:wrap; gap:8px 16px; margin-top:22px; color:var(--soft); font:400 9px var(--mono); letter-spacing:.04em; }

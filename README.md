@@ -50,3 +50,16 @@ The canvas is capped at 40 nodes to keep it useful for explaining concepts. Auto
 Palette, type hierarchy, fine strokes, restrained emphasis, and small radii are adapted from [Cathryn Lavery's Diagram Design](https://github.com/cathrynlavery/diagram-design), inspected at commit `f2f4d49ea8d632f17cf196ba26599277a93f767b`. This playground warms the background slightly and increases interface typography for interaction. The graph renderer and motion system are new implementation, rather than the upstream skill's canonical controller.
 
 The upstream MIT notice is retained in `dist/THIRD_PARTY_NOTICES.txt`. Fonts load from Google Fonts and fall back to installed system fonts when offline. No upstream icon bundle is included. The app has no backend, telemetry, or API integration.
+
+## Unlisted docs preview
+
+The TypeSafe introduction layout study is mounted at `/docs/` in the same package and server:
+
+- Playground: http://127.0.0.1:4178/
+- Docs: http://127.0.0.1:4178/docs/
+
+`/docs` redirects to `/docs/`. No playground navigation points to the docs route. The page retains `noindex,nofollow`; being unlisted is not an access-control mechanism. This integration is local-only until publication is requested.
+
+Both views import `dist/model.js`, `dist/renderer.js`, `dist/card-themes.js`, and `dist/diagram.css`. The docs use the renderer's read-only mode (complete diagram, no editing or panning, full mobile fit), with their own page layout and appearance preferences. The playground keeps its interactive mode. Changes to shared graph geometry, motion, or card styles affect both views.
+
+`dist/docs/` contains the TypeSafe page layout, condensed rewritten introduction, original Mermaid reference, and public logo assets. It supports Original / Animated comparison, card styles, pause, expansion, theme switching, and local navigation search. Links to other documentation pages go to the official docs. Source reference: https://docs.typesafe.ai/introduction. No TypeSafe analytics or authentication code is included.
