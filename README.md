@@ -15,6 +15,7 @@ Open http://127.0.0.1:4178. `npm test` checks graph editing and layout contracts
 - Seven starting diagrams: branching ideas, pipeline, parallel fan-out, feedback loop, architecture, a blank starting point, and the Jev request/response composition (`?preset=jev`).
 - Select a node to rename it, edit its detail, or spawn one to three branches. Branches can themselves spawn more branches.
 - Signal, stream, and trace connection effects; independent flow speed and playback speed.
+- Six card styles above the canvas: the unchanged Baseline, plus Outline, Soft, Neon, Offset, and Terminal. Styles apply to every preset, work in light/dark mode, persist locally, and carry through static SVG export.
 - Replay and scrub the growth sequence. Pause freezes the animation clock. Drag empty canvas to pan; zoom or fit with the canvas controls.
 - Undo edits, remove a subtree, and reset a preset. The active diagram and appearance settings are saved in this browser's local storage; switching presets replaces the active graph (Undo can recover it during the current session).
 - SVG export produces a complete static diagram, including nodes hidden by the current timeline position, with portable system fonts and the current palette. It does not export animation.

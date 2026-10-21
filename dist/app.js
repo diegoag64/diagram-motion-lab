@@ -2,10 +2,19 @@ import {PRESETS,createGraph,duration,clone,grow,removeBranch,MAX_NODES} from './
 import {Renderer} from './renderer.js';
 const $=id=>document.getElementById(id);
 const STORAGE='diagram-motion-lab-v1';
+const CARD_THEMES=[
+  {id:'baseline',name:'Baseline',description:'The original: slate surfaces, fine borders, and quiet editorial type.'},
+  {id:'outline',name:'Outline',description:'Just the essentials: open surfaces and crisp, rounded outlines.'},
+  {id:'soft',name:'Soft',description:'Gentle tinted cushions with generous curves and no hard borders.'},
+  {id:'neon',name:'Neon',description:'Luminous accent edges with a subtle glow, like signals on a dark display.'},
+  {id:'offset',name:'Offset',description:'Bold, square-edged cards with a solid offset shadow and print-like weight.'},
+  {id:'terminal',name:'Terminal',description:'Technical panels with dashed edges, monospace labels, and precise corners.'}
+];
 const reduced=matchMedia('(prefers-reduced-motion: reduce)');
 let graph=createGraph('branches'),selected='n0',time=0,flowTime=0,playing=!reduced.matches,speed=1,flowSpeed=1,mode='signal',flowEnabled=true,history=[],toastTimer;
 let saved={};
 try { saved=JSON.parse(localStorage.getItem(STORAGE)||'{}')||{}; } catch {}
+let cardTheme=CARD_THEMES.some(t=>t.id===saved.cardTheme)?saved.cardTheme:'baseline';
 function validGraph(g) {
   if(!g || !PRESETS.some(p=>p.id===g.preset)||!Array.isArray(g.nodes)||!Array.isArray(g.edges)||!Number.isInteger(g.nextId))return false;
   if(!g.nodes.length||g.nodes.length>MAX_NODES||g.edges.length>100)return false;
@@ -33,8 +42,21 @@ if(saved.dots===false){$('dots').checked=false;$('canvas').classList.add('no-dot
 $('flow-speed').value=flowSpeed;$('flow-label').textContent=`${flowSpeed}×`;$('flow-enabled').checked=flowEnabled;
 const renderer=new Renderer($('diagram'),select,percent=>$('zoom-label').textContent=`${percent}%`);renderer.reduced=reduced.matches;
 function persist() {
-  try {localStorage.setItem(STORAGE,JSON.stringify({graph,selected,mode,flowEnabled,flowSpeed,theme:document.documentElement.dataset.theme,dots:$('dots').checked}));}catch{}
+  try {localStorage.setItem(STORAGE,JSON.stringify({graph,selected,mode,flowEnabled,flowSpeed,cardTheme,theme:document.documentElement.dataset.theme,dots:$('dots').checked}));}catch{}
 }
+function syncCardTheme() {
+  $('diagram').dataset.cardTheme=cardTheme;
+  document.querySelectorAll('[data-card-style]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.cardStyle===cardTheme)));
+  $('card-theme-description').textContent=CARD_THEMES.find(t=>t.id===cardTheme).description;
+  for(const n of graph.nodes)renderer.updateLabel(n);
+}
+for(const theme of CARD_THEMES) {
+  const button=document.createElement('button');button.type='button';button.dataset.cardStyle=theme.id;button.setAttribute('aria-pressed','false');
+  const sample=document.createElement('span');sample.className='card-sample';sample.setAttribute('aria-hidden','true');sample.textContent='Aa';
+  const name=document.createElement('span');name.textContent=theme.name;button.append(sample,name);
+  button.addEventListener('click',()=>{cardTheme=theme.id;syncCardTheme();persist();});$('card-themes').append(button);
+}
+$('diagram').dataset.cardTheme=cardTheme;
 function toast(message) {clearTimeout(toastTimer);$('toast').textContent=message;$('toast').classList.add('visible');toastTimer=setTimeout(()=>$('toast').classList.remove('visible'),3500);}
 function snapshot() {history.push({graph:clone(graph),selected,time});if(history.length>30)history.shift();$('undo').disabled=false;}
 
@@ -68,6 +90,7 @@ function syncPlayback() {
 }
 function syncGraph(instant=false) {
   const p=PRESETS.find(p=>p.id===graph.preset);
+  document.querySelector('.card-studio').dataset.preset=graph.preset;
   document.querySelector('.workspace').classList.toggle('wide-diagram',!!p.wide);
   $('collection-count').textContent=String(PRESETS.length).padStart(2,'0');
   $('primitive-note').hidden=!p.wide;
@@ -130,4 +153,4 @@ function tick(now) {
   renderer.render(time,flowTime,mode,flowEnabled,now);syncPlayback();frame=requestAnimationFrame(tick);
 }
 document.addEventListener('visibilitychange',()=>{last=performance.now();if(document.hidden){cancelAnimationFrame(frame);}else{frame=requestAnimationFrame(tick);}});
-syncModes();syncThemeButton();syncGraph(true);document.fonts.ready.then(()=>{for(const n of graph.nodes)renderer.updateLabel(n);renderer.fit();});frame=requestAnimationFrame(tick);
+syncModes();syncThemeButton();syncGraph(true);syncCardTheme();document.fonts.ready.then(()=>{for(const n of graph.nodes)renderer.updateLabel(n);renderer.fit();});frame=requestAnimationFrame(tick);
