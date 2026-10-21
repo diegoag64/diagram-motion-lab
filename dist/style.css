@@ -154,7 +154,7 @@ svg[data-preset=jev] .junction-dot { fill:var(--accent); }
 .edge-label text { fill:var(--muted); font:400 12px var(--mono); }
 .edge-label-mask { fill:var(--canvas); }
 textarea { width:100%; resize:vertical; min-height:74px; max-height:160px; padding:10px 11px; border:1px solid var(--rule); border-radius:4px; color:var(--ink); background:var(--paper); font:400 12px/1.6 var(--sans); }
-/* Card explorations share tokens with their previews; Baseline keeps the original rules. */
+/* Card explorations share tokens with their previews; Slate keeps the original filled-card rules. */
 .card-studio { margin:0 0 22px; }
 .card-studio>.section-label { margin-bottom:12px; }
 #card-themes { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:8px; }
@@ -163,15 +163,15 @@ textarea { width:100%; resize:vertical; min-height:74px; max-height:160px; paddi
 #card-themes button:hover { border-color:var(--accent); }
 .card-sample { display:grid; place-items:center; width:52px; height:31px; background:var(--card-fill,var(--surface)); border:var(--card-stroke-width,1px) var(--card-border-style,solid) var(--card-stroke,var(--muted)); border-radius:var(--card-radius,6px); filter:var(--card-filter,none); color:var(--ink); font:500 14px var(--card-font,var(--sans)); }
 #card-theme-description { margin-top:10px; min-height:36px; }
-[data-card-theme=outline],[data-card-style=outline] { --card-fill:var(--canvas); --card-stroke:var(--ink); --card-stroke-width:1.3px; --card-radius:14px; }
+[data-card-theme=baseline],[data-card-style=baseline] { --card-fill:var(--canvas); --card-stroke:var(--ink); --card-stroke-width:1.3px; --card-radius:14px; }
 [data-card-theme=soft],[data-card-style=soft] { --card-fill:color-mix(in srgb,var(--accent) 15%,var(--canvas)); --card-stroke:transparent; --card-stroke-width:0px; --card-radius:22px; }
 [data-card-theme=neon],[data-card-style=neon] { --card-fill:var(--canvas); --card-stroke:var(--accent); --card-stroke-width:1.5px; --card-radius:9px; --card-filter:drop-shadow(0 0 5px color-mix(in srgb,var(--accent) 45%,transparent)); }
 [data-card-theme=offset],[data-card-style=offset] { --card-fill:var(--canvas); --card-stroke:var(--ink); --card-stroke-width:2px; --card-radius:0px; --card-filter:drop-shadow(4px 4px 0 var(--accent)); }
 [data-card-theme=terminal],[data-card-style=terminal] { --card-fill:var(--canvas); --card-stroke:var(--muted); --card-stroke-width:1px; --card-radius:2px; --card-dash:5 3; --card-border-style:dashed; --card-font:var(--mono); }
-svg[data-card-theme]:not([data-card-theme=baseline]) .diagram-node .node-box { fill:var(--card-fill); stroke:var(--card-stroke); stroke-width:var(--card-stroke-width); rx:var(--card-radius); ry:var(--card-radius); filter:var(--card-filter,none); stroke-dasharray:var(--card-dash,none); }
-svg[data-card-theme]:not([data-card-theme=baseline]) .selection-ring { rx:var(--card-radius); ry:var(--card-radius); }
-svg[data-card-theme]:not([data-card-theme=baseline]) .diagram-node.focal .node-box { fill:color-mix(in srgb,var(--accent) 22%,var(--canvas)); }
-svg[data-card-theme]:not([data-card-theme=baseline]) .diagram-node:hover .node-box { stroke:var(--accent); }
+svg[data-card-theme]:not([data-card-theme=slate]) .diagram-node .node-box { fill:var(--card-fill); stroke:var(--card-stroke); stroke-width:var(--card-stroke-width); rx:var(--card-radius); ry:var(--card-radius); filter:var(--card-filter,none); stroke-dasharray:var(--card-dash,none); }
+svg[data-card-theme]:not([data-card-theme=slate]) .selection-ring { rx:var(--card-radius); ry:var(--card-radius); }
+svg[data-card-theme]:not([data-card-theme=slate]) .diagram-node.focal .node-box { fill:color-mix(in srgb,var(--accent) 22%,var(--canvas)); }
+svg[data-card-theme]:not([data-card-theme=slate]) .diagram-node:hover .node-box { stroke:var(--accent); }
 svg[data-card-theme=offset] .node-name { font-weight:600; }
 svg[data-card-theme=terminal] .node-name,svg[data-card-theme=terminal] .node-subtitle { font-family:var(--mono); }
 svg[data-card-theme=terminal] .node-index,svg[data-card-theme=neon] .node-index { fill:var(--accent); }
