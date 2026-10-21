@@ -82,7 +82,7 @@ export class Renderer {
       const node=this.nodes.get(n.id);node.setAttribute('transform',`translate(${p.x},${p.y+(1-visible)*10})`);node.setAttribute('opacity',visible);
       node.style.pointerEvents=visible>.5?'auto':'none';node.setAttribute('tabindex',visible>.5?'0':'-1');node.setAttribute('aria-hidden',String(visible<=.5));
     }
-    for(const [i,e] of this.graph.edges.entries()) {
+    for(const e of this.graph.edges) {
       const a=this.positions.get(e.from),b=this.positions.get(e.to);if(!a||!b)continue;
       const geo=edgeGeometry(a,b,e.feedback,this.vertical),dom=this.edges.get(e.id);
       const birth=Math.max(nodeMap.get(e.to).born,nodeMap.get(e.from).born);
@@ -92,9 +92,11 @@ export class Renderer {
       dom.flow.setAttribute('d',geo.d);
       const active=flowEnabled&&!this.reduced&&reveal>=1;
       dom.flow.style.display=active&&mode!=='signal'?'':'none';dom.particle.style.display=active&&mode==='signal'?'':'none';
-      const phase=(flowTime*.22-i*.17)%1;const t=(phase+1)%1;
+      // Connections leaving the same node share a phase, including newly grown branches.
+      const sourcePhase=nodeMap.get(e.from).born;
+      const phase=(flowTime*.22-sourcePhase*.17)%1;const t=(phase+1)%1;
       if(mode==='signal') { const p=bezierPoint(geo.points,t);dom.particle.setAttribute('cx',p.x);dom.particle.setAttribute('cy',p.y);dom.particle.setAttribute('opacity',Math.min(t*8,(1-t)*8,1)); }
-      else if(mode==='stream') { dom.flow.setAttribute('stroke-dasharray','3 12');dom.flow.setAttribute('stroke-dashoffset',-flowTime*25+i*4);dom.flow.setAttribute('opacity','.8'); }
+      else if(mode==='stream') { dom.flow.setAttribute('stroke-dasharray','3 12');dom.flow.setAttribute('stroke-dashoffset',-flowTime*25+sourcePhase*4);dom.flow.setAttribute('opacity','.8'); }
       else { dom.flow.setAttribute('stroke-dasharray','24 100');dom.flow.setAttribute('stroke-dashoffset',24-t*124);dom.flow.setAttribute('opacity','.9'); }
     }
   }
