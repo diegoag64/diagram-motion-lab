@@ -32,9 +32,11 @@ if(['signal','stream','draw'].includes(saved.mode))mode=saved.mode;
 if(typeof saved.flowEnabled==='boolean')flowEnabled=saved.flowEnabled;
 if(Number.isFinite(saved.flowSpeed)&&saved.flowSpeed>=.3&&saved.flowSpeed<=2.5)flowSpeed=saved.flowSpeed;
 document.documentElement.dataset.theme=saved.theme==='dark'?'dark':'light';
-if(saved.dots===false){$('dots').checked=false;$('canvas').classList.add('no-dots');}
+$('dots').checked=saved.dots===true;$('canvas').classList.toggle('no-dots',!$('dots').checked);
 $('flow-speed').value=flowSpeed;$('flow-label').textContent=`${flowSpeed}×`;$('flow-enabled').checked=flowEnabled;
 const renderer=new Renderer($('diagram'),select,percent=>$('zoom-label').textContent=`${percent}%`);renderer.reduced=reduced.matches;
+// The lab opens the entire composition at every width; zoom remains available for detail.
+const labFitObserver=new ResizeObserver(()=>{if($('diagram').clientWidth>0)renderer.fit(false);});labFitObserver.observe($('diagram'));
 function persist() {
   try {localStorage.setItem(STORAGE,JSON.stringify({graph,selected,mode,flowEnabled,flowSpeed,cardTheme,theme:document.documentElement.dataset.theme,dots:$('dots').checked}));}catch{}
 }
@@ -63,11 +65,12 @@ const previews={
  architecture:'<path d="M25 18H70M70 18C90 18 85 5 105 5M70 18C90 18 85 32 105 32"/><rect x="0" y="10" width="25" height="16" rx="2"/><rect x="58" y="10" width="25" height="16" rx="2"/><rect x="105" y="0" width="30" height="10" rx="2"/><rect x="105" y="27" width="30" height="10" rx="2"/>',
  blank:'<rect x="53" y="7" width="34" height="23" rx="3"/><path d="M64 18H76M70 12V24"/>'
 };
+const presetLabels={jev:'Typed answers · Jev',branches:'Branching ideas',pipeline:'Pipeline',fanout:'Parallel thinking',feedback:'Feedback loop',architecture:'Architecture',blank:'Blank canvas'};
 for(const p of PRESETS) {
   const button=document.createElement('button');button.className='preset';button.dataset.preset=p.id;
   // Only bundled, authored preset names and SVG thumbnails enter this markup.
-  button.innerHTML=`<span class="preset-head"><span class="preset-number">${p.tag}</span>${p.name}</span><svg class="preset-preview" viewBox="0 0 150 38" aria-hidden="true"><g stroke="currentColor" stroke-width="1" fill="var(--paper)">${previews[p.id]}</g></svg>`;
-  button.addEventListener('click',()=>{if(graph.preset===p.id)return;snapshot();graph=createGraph(p.id);selected='n0';time=reduced.matches?duration(graph):0;flowTime=0;playing=!reduced.matches;syncGraph(true);toast(`${p.name} loaded`);});$('presets').append(button);
+  button.innerHTML=`<span class="preset-head">${presetLabels[p.id]}</span><svg class="preset-preview" viewBox="0 0 150 38" aria-hidden="true"><g stroke="currentColor" stroke-width="1" fill="var(--paper)">${previews[p.id]}</g></svg>`;
+  button.addEventListener('click',()=>{if(graph.preset===p.id){closeLibrary();return;}snapshot();graph=createGraph(p.id);selected='n0';time=reduced.matches?duration(graph):0;flowTime=0;playing=!reduced.matches;syncGraph(true);closeLibrary();toast(`${p.name} loaded`);});$('presets').append(button);
 }
 function select(id) {selected=id;renderer.select(id);syncInspector();persist();}
 function syncInspector() {
@@ -79,21 +82,21 @@ function syncPlayback() {
   $('play').textContent=playing?'Ⅱ':'▶';$('play').setAttribute('aria-label',playing?'Pause animation':'Play animation');
   $('timeline').max=duration(graph);$('timeline').value=Math.min(time,duration(graph));
   $('time-label').textContent=`${Math.min(time,duration(graph)).toFixed(1)} / ${duration(graph).toFixed(1)}s`;
-  $('canvas-state').textContent=reduced.matches?'REDUCED MOTION':playing?'LIVE CANVAS':'PAUSED';
+  $('canvas-state').textContent=reduced.matches?'Reduced motion':playing?'Playing':'Paused';
   $('play').disabled=reduced.matches;$('replay').disabled=reduced.matches;$('timeline').disabled=reduced.matches;
 }
 function syncGraph(instant=false) {
   const p=PRESETS.find(p=>p.id===graph.preset);
   document.querySelector('.card-studio').dataset.preset=graph.preset;
   document.querySelector('.workspace').classList.toggle('wide-diagram',!!p.wide);
-  $('collection-count').textContent=String(PRESETS.length).padStart(2,'0');
+  $('collection-count').textContent=String(PRESETS.length);
   $('primitive-note').hidden=!p.wide;
   $('diagram-title').textContent=p.name;$('diagram-caption').textContent=p.caption;$('description').textContent=p.description;$('preset-number').textContent=p.tag;
   $('diagram').querySelector('title').textContent=p.name;$('diagram').setAttribute('aria-label',`${p.name}. Select a node to edit or grow branches.`);
-  $('node-count').textContent=`${graph.nodes.filter(n=>n.kind!=='junction').length} NODES · ${graph.edges.length} CONNECTIONS`;
+  $('node-count').textContent=`${graph.nodes.filter(n=>n.kind!=='junction').length} nodes · ${graph.edges.length} connections`;
   document.querySelectorAll('.preset').forEach(b=>{b.classList.toggle('active',b.dataset.preset===p.id);b.setAttribute('aria-pressed',String(b.dataset.preset===p.id));});
   if(reduced.matches)time=duration(graph);
-  renderer.setGraph(graph,selected,{instant});renderer.fit();renderer.render(time,flowTime,mode,flowEnabled);
+  renderer.setGraph(graph,selected,{instant});renderer.fit(false);renderer.render(time,flowTime,mode,flowEnabled);
   syncInspector();syncPlayback();persist();
 }
 function syncModes() {document.querySelectorAll('[data-mode]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.mode===mode)));}
@@ -147,4 +150,10 @@ function tick(now) {
   renderer.render(time,flowTime,mode,flowEnabled,now);syncPlayback();frame=requestAnimationFrame(tick);
 }
 document.addEventListener('visibilitychange',()=>{last=performance.now();if(document.hidden){cancelAnimationFrame(frame);}else{frame=requestAnimationFrame(tick);}});
-syncModes();syncThemeButton();syncGraph(true);syncCardTheme();document.fonts.ready.then(()=>{for(const n of graph.nodes)renderer.updateLabel(n);renderer.fit();});frame=requestAnimationFrame(tick);
+syncModes();syncThemeButton();syncGraph(true);syncCardTheme();document.fonts.ready.then(()=>{for(const n of graph.nodes)renderer.updateLabel(n);renderer.fit(false);});frame=requestAnimationFrame(tick);
+
+function closeLibrary() {document.body.classList.remove('tools-open');$('library-toggle').setAttribute('aria-expanded','false');$('library-toggle').textContent='Tools';document.querySelector('.work-sheet').inert=false;}
+$('library-toggle').addEventListener('click',()=>{const open=document.body.classList.toggle('tools-open');$('library-toggle').setAttribute('aria-expanded',String(open));$('library-toggle').textContent=open?'Close':'Tools';document.querySelector('.work-sheet').inert=open;});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.body.classList.contains('tools-open')){closeLibrary();$('library-toggle').focus();}});
+
+matchMedia('(max-width:1100px)').addEventListener('change',closeLibrary);

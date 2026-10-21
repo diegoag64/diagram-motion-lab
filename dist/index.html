@@ -10,54 +10,54 @@
 </head>
 <body>
   <header class="app-header">
-    <a class="brand" href="./" aria-label="Diagram Motion Lab home"><span class="brand-mark" aria-hidden="true">d<span>·</span></span><span>Diagram <em>Motion Lab</em></span></a>
-    <div class="header-right"><span class="edition">A LITTLE ROOM FOR BIG IDEAS</span><button id="theme" class="icon-button" aria-label="Switch to dark theme" title="Switch theme">◐</button><button id="export" class="button">Export SVG <span aria-hidden="true">↗</span></button></div>
+    <button id="library-toggle" class="button mobile-only" aria-expanded="false" aria-controls="library">Tools</button><a class="brand" href="./" aria-label="Diagram Motion Lab home"><svg class="brand-mark" viewBox="0 0 28 28" aria-hidden="true"><path d="M3 14h7c6 0 5-8 12-8M10 14c6 0 5 8 12 8"/><circle cx="3" cy="14" r="2"/><circle cx="23" cy="6" r="2"/><circle cx="23" cy="22" r="2"/></svg><span>Diagram Motion Lab</span></a>
+    <div class="header-right"><span class="edition">Playground</span><button id="theme" class="icon-button" aria-label="Switch to dark theme" title="Switch theme">◐</button><button id="export" class="button">Export SVG <span aria-hidden="true">↗</span></button></div>
   </header>
   <div class="workspace">
-    <aside class="library" aria-label="Diagram presets">
-      <div class="section-label">THE COLLECTION <span id="collection-count">07</span></div>
+    <aside id="library" class="library" aria-label="Diagram presets">
+      <div class="section-label">Diagrams <span id="collection-count">7</span></div>
       <nav id="presets" aria-label="Choose a diagram"></nav>
-      <div class="library-note"><span class="little-asterisk">✳</span><p>Good ideas rarely<br>travel in straight lines.</p><span class="mono">MAKE A LITTLE SPACE.</span></div>
-      <a class="source-link" href="https://github.com/cathrynlavery/diagram-design" target="_blank" rel="noreferrer">Style by Diagram Design ↗</a>
-    </aside>
-    <main class="main">
-      <section class="intro"><div><p class="eyebrow">THE DIAGRAM PLAYGROUND <span>/</span> <span id="preset-number">01</span></p><h1 id="diagram-title">Branching ideas</h1><p id="diagram-caption">One thought. Many possibilities.</p></div><span class="intro-label">THINK IT.<br>CONNECT IT.<br>BRING IT TO LIFE.</span></section>
       <section class="card-studio" aria-label="Card styles">
-        <div class="section-label">CARD STYLES <span>BASELINE + FIVE EXPLORATIONS</span></div>
+        <div class="section-label">Card style</div>
         <div id="card-themes" role="group" aria-label="Choose a card style"></div>
         <p id="card-theme-description" class="help" aria-live="polite"></p>
       </section>
+      <section class="inspector-section"><div class="section-label">Motion</div>
+        <div class="field-title">Connection style</div><div class="mode-buttons" role="group" aria-label="Connection animation"><button data-mode="signal" aria-pressed="true"><span aria-hidden="true">─●─</span>Signal</button><button data-mode="stream" aria-pressed="false"><span aria-hidden="true">┄┄→</span>Stream</button><button data-mode="draw" aria-pressed="false"><span aria-hidden="true">──↗</span>Trace</button></div>
+        <label class="field-title range-title" for="flow-speed">Flow speed <output id="flow-label">1×</output></label><input id="flow-speed" type="range" min="0.3" max="2.5" step="0.1" value="1">
+        <label class="toggle-row"><span>Show connection flow</span><input id="flow-enabled" type="checkbox" checked role="switch"></label>
+        <label class="toggle-row"><span>Canvas grid</span><input id="dots" type="checkbox" role="switch"></label>
+      </section>
+
+      <a class="source-link" href="https://github.com/cathrynlavery/diagram-design" target="_blank" rel="noreferrer">Style by Diagram Design ↗</a>
+    </aside>
+    <div class="work-sheet"><main class="main">
+      <section class="intro"><div><span id="preset-number" hidden></span><h1 id="diagram-title">Branching ideas</h1><p id="diagram-caption">One thought. Many possibilities.</p></div></section>
       <section class="canvas-shell" aria-label="Interactive diagram canvas">
-        <div class="canvas-top"><span class="canvas-tag"><span class="status-dot"></span> <span id="canvas-state">LIVE CANVAS</span></span><span id="node-count" class="mono">7 NODES · 6 CONNECTIONS</span><button id="reset" class="text-button" title="Reset this diagram">Reset diagram ↺</button></div>
-        <div id="canvas" class="canvas"><svg id="diagram" xmlns="http://www.w3.org/2000/svg" aria-label="Interactive branching diagram"><title>Branching ideas</title><desc>Select a node to edit its label or grow branches. Drag empty space to pan.</desc><defs><marker id="arrow" viewBox="0 0 8 8" markerWidth="6" markerHeight="6" refX="7" refY="4" orient="auto-start-reverse"><path d="M1 1L7 4L1 7" fill="none" stroke="var(--muted)" stroke-width="1.2"/></marker></defs><g id="edge-layer"></g><g id="node-layer"></g></svg></div>
-        <div class="canvas-bottom"><span class="canvas-hint">Select a node to grow an idea <span>·</span> Drag to pan</span><div class="zoom-controls"><button id="zoom-out" aria-label="Zoom out">−</button><span id="zoom-label">100%</span><button id="zoom-in" aria-label="Zoom in">+</button><button id="fit" class="fit-button">Fit</button></div></div>
+        <div class="canvas-top"><span class="canvas-tag"><span class="status-dot"></span> <span id="canvas-state">Playing</span></span><span id="node-count" class="mono">7 nodes · 6 connections</span><button id="reset" class="text-button" title="Reset this diagram">Reset diagram ↺</button></div>
+        <div id="canvas" class="canvas no-dots"><svg id="diagram" xmlns="http://www.w3.org/2000/svg" aria-label="Interactive branching diagram"><title>Branching ideas</title><desc>Select a node to edit its label or grow branches. Drag empty space to pan.</desc><defs><marker id="arrow" viewBox="0 0 8 8" markerWidth="6" markerHeight="6" refX="7" refY="4" orient="auto-start-reverse"><path d="M1 1L7 4L1 7" fill="none" stroke="var(--muted)" stroke-width="1.2"/></marker></defs><g id="edge-layer"></g><g id="node-layer"></g></svg></div>
+        <div class="canvas-bottom"><span class="canvas-hint">Select a node to edit <span>·</span> Drag to pan</span><div class="zoom-controls"><button id="zoom-out" aria-label="Zoom out">−</button><span id="zoom-label">100%</span><button id="zoom-in" aria-label="Zoom in">+</button><button id="fit" class="fit-button">Fit</button></div></div>
       </section>
       <section class="transport" aria-label="Animation playback">
         <button id="play" class="play-button" aria-label="Pause animation">Ⅱ</button><button id="replay" class="replay-button" aria-label="Replay growth animation" title="Replay">↺</button>
-        <div class="timeline-block"><div class="timeline-meta"><label for="timeline">THE UNFOLDING</label><output id="time-label" for="timeline">0.0 / 3.4s</output></div><input id="timeline" type="range" min="0" max="3.4" step="0.01" value="0" aria-label="Animation timeline"></div>
+        <div class="timeline-block"><div class="timeline-meta"><label for="timeline">Growth timeline</label><output id="time-label" for="timeline">0.0 / 3.4s</output></div><input id="timeline" type="range" min="0" max="3.4" step="0.01" value="0" aria-label="Animation timeline"></div>
         <label class="speed-label"><span class="sr-only">Playback speed</span><select id="speed"><option value="0.5">0.5×</option><option value="1" selected>1× speed</option><option value="1.5">1.5×</option><option value="2">2×</option></select></label>
       </section>
       <p class="diagram-description" id="description"></p>
-      <p id="primitive-note" class="primitive-note" hidden>COMPOSITION PRIMITIVES <span>Merge junction</span><span>Labeled connection</span><span>Model container</span><span>Multiline node</span></p>
+      <p id="primitive-note" class="primitive-note" hidden>Primitives: <span>Merge junction</span><span>Labeled connection</span><span>Model container</span><span>Multiline node</span></p>
     </main>
     <aside class="inspector" aria-label="Diagram controls">
-      <section class="inspector-section"><div class="section-label">BRING IT TO LIFE <span>↗</span></div><h2>A little motion.</h2><p class="help">Give your connections a rhythm.</p>
-        <div class="field-title">Connection style</div><div class="mode-buttons" role="group" aria-label="Connection animation"><button data-mode="signal" aria-pressed="true"><span aria-hidden="true">─●─</span>Signal</button><button data-mode="stream" aria-pressed="false"><span aria-hidden="true">┄┄➜</span>Stream</button><button data-mode="draw" aria-pressed="false"><span aria-hidden="true">──↗</span>Trace</button></div>
-        <label class="field-title range-title" for="flow-speed">Flow speed <output id="flow-label">1×</output></label><input id="flow-speed" type="range" min="0.3" max="2.5" step="0.1" value="1">
-        <label class="toggle-row"><span>Show connection flow</span><input id="flow-enabled" type="checkbox" checked role="switch"></label>
-        <label class="toggle-row"><span>Dotted paper</span><input id="dots" type="checkbox" checked role="switch"></label>
-      </section>
-      <section class="inspector-section node-section"><div class="section-label">THE SELECTED IDEA <span class="selection-dot"></span></div><div class="selected-heading"><h2 id="selected-title">An idea</h2><span id="selected-id" class="mono">N0</span></div>
-        <label class="field-title" for="node-label">Name</label><input id="node-label" maxlength="40" type="text" autocomplete="off">
-        <label class="field-title" for="node-subtitle">Details · one line per thought</label><textarea id="node-subtitle" maxlength="120" rows="3" autocomplete="off"></textarea>
+      <section class="inspector-section node-section"><div class="section-label">Selected node</div><div class="selected-heading"><h2 id="selected-title">An idea</h2><span id="selected-id" class="mono">N0</span></div>
+        <div class="name-field"><label class="field-title" for="node-label">Name</label><input id="node-label" maxlength="40" type="text" autocomplete="off"></div>
+        <div class="details-field"><label class="field-title" for="node-subtitle">Details</label><textarea id="node-subtitle" maxlength="120" rows="2" autocomplete="off"></textarea></div>
         <div class="branch-label"><label class="field-title" for="branch-count">New branches</label><select id="branch-count"><option value="1">1 branch</option><option value="2" selected>2 branches</option><option value="3">3 branches</option></select></div>
-        <button id="grow" class="grow-button">Grow branches <span aria-hidden="true">↗</span></button><p class="help grow-help">Connections reach out.<br>New possibilities take shape.</p>
+        <button id="grow" class="grow-button">Grow branches <span aria-hidden="true">↗</span></button><p class="help grow-help">New branches start from the selected node.</p>
         <div class="edit-actions"><button id="undo" class="text-button" disabled>↶ Undo</button><button id="remove" class="text-button" disabled>Remove branch</button></div>
       </section>
-      <section class="inspector-section palette-section"><div class="section-label">THE EDITORIAL PALETTE</div><div class="swatches" aria-label="Paper, ink, muted slate, and burnt orange"><i></i><i></i><i></i><i></i></div><p class="help">Quiet structure. One point of focus.</p></section>
-    </aside>
+
+    </aside></div>
   </div>
-  <footer class="app-footer"><span>DIAGRAM MOTION LAB <span class="footer-dot">·</span> EXPERIMENT NO. 001</span><span>Built for ideas in progress.</span><a href="./THIRD_PARTY_NOTICES.txt" target="_blank">Credits & licenses ↗</a></footer>
+  <footer class="app-footer"><span>Changes saved in this browser</span><span>Space to play or pause</span><a href="./THIRD_PARTY_NOTICES.txt" target="_blank">Credits & licenses ↗</a></footer>
   <div id="toast" role="status" aria-live="polite"></div>
   <noscript><p>This playground needs JavaScript for editing and animation. Please enable JavaScript to use it.</p></noscript>
 </body>
