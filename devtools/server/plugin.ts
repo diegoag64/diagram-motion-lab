@@ -1,7 +1,7 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { Plugin } from "vite";
-import { TypeSafeClient } from "@typesafe-ai/sdk";
-import { JevRecorder } from "./recorder.ts";
+
+import { createJevDevtools } from "./index.js";
 import { makeRequest, sampleTransport } from "./scenarios.ts";
 import type { Scenario } from "./scenarios.ts";
 
@@ -16,22 +16,25 @@ const send = (res: ServerResponse, status: number, data: unknown) => {
 const validSession = (value: unknown): value is string =>
   typeof value === "string" && /^[a-f0-9-]{36}$/.test(value);
 export function jevInspectorServer(apiKey?: string): Plugin {
-  const recorder = new JevRecorder({
+  const inspector = createJevDevtools({
+    enabled: true,
+    origin: "http://127.0.0.1:4182",
     redact: (path, value) => (path.at(-1) === "email" ? "[redacted]" : value),
   });
   const running = new Map<
     string,
     { session: string; controller: AbortController }
   >();
-  const streams = new Set<ServerResponse>();
+
   return {
     name: "jev-inspector-server",
     apply: "serve",
     configureServer(server) {
       server.httpServer?.once("close", () => {
         for (const r of running.values()) r.controller.abort();
-        for (const stream of streams) stream.end();
+        inspector.dispose();
       });
+      server.middlewares.use(inspector.middleware);
       server.middlewares.use(
         async (req: IncomingMessage, res: ServerResponse, next) => {
           if (!req.url?.startsWith("/__jev/")) return next();
@@ -52,33 +55,6 @@ export function jevInspectorServer(apiKey?: string): Plugin {
           }
           if (req.method === "GET" && url.pathname === "/__jev/config") {
             send(res, 200, { liveAvailable: !!apiKey, version: 1 });
-            return;
-          }
-          if (req.method === "GET" && url.pathname === "/__jev/events") {
-            res.writeHead(200, {
-              "content-type": "text/event-stream",
-              "cache-control": "no-store",
-              connection: "keep-alive",
-              "x-accel-buffering": "no",
-            });
-            streams.add(res);
-            const publish = () => {
-              if (!res.destroyed)
-                res.write(
-                  `event: snapshot\ndata: ${JSON.stringify({ version: 1, traces: recorder.snapshot(session) })}\n\n`,
-                );
-            };
-            const unsubscribe = recorder.subscribe(publish);
-            publish();
-            const heartbeat = setInterval(
-              () => res.write(": keepalive\n\n"),
-              15_000,
-            );
-            req.on("close", () => {
-              clearInterval(heartbeat);
-              unsubscribe();
-              streams.delete(res);
-            });
             return;
           }
           if (req.method !== "POST") {
@@ -111,11 +87,6 @@ export function jevInspectorServer(apiKey?: string): Plugin {
               throw new Error("Expected object");
           } catch {
             send(res, 400, { error: "Invalid JSON" });
-            return;
-          }
-          if (url.pathname === "/__jev/clear") {
-            recorder.clear(session);
-            send(res, 200, { ok: true });
             return;
           }
           if (url.pathname === "/__jev/cancel") {
@@ -166,23 +137,21 @@ export function jevInspectorServer(apiKey?: string): Plugin {
           running.set(id, { session, controller });
           try {
             const request = await makeRequest(body.scenario!, body.message);
-            const client = recorder.instrument(
-              new TypeSafeClient({
+            const client = inspector.createClient(
+              {
                 apiKey: body.mode === "live" ? apiKey : "sample-not-a-real-key",
-                fetch: recorder.transport(
+                fetch:
                   body.mode === "live"
                     ? globalThis.fetch
                     : sampleTransport(body.scenario!),
-                ),
                 logLevel: "off",
                 retry: { maxRetries: body.scenario === "retry" ? 1 : 0 },
                 defaultHeaders:
                   body.scenario === "image"
                     ? { "TypeSafe-Danger-Zone-Images": "true" }
                     : {},
-              }),
+              },
               {
-                session,
                 label:
                   body.scenario === "image"
                     ? "Locate a mug"

@@ -10,3 +10,6 @@ devtools/dist/
 .env
 .env.*
 !.env.example
+
+devtools/lib/
+*.tgz

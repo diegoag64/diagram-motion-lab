@@ -24,9 +24,15 @@ function initialHeight() {
 }
 
 /** Non-modal drawer: the app remains usable and children stay mounted when closed. */
-export function JevDrawer({ children }: { children: ReactNode }) {
+export function JevDrawer({
+  children,
+  defaultOpen = true,
+}: {
+  children: ReactNode;
+  defaultOpen?: boolean;
+}) {
   const id = useId();
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(defaultOpen);
   const [expanded, setExpanded] = useState(false);
   const [viewport, setViewport] = useState(viewportHeight);
   const [height, setHeight] = useState(initialHeight);
@@ -71,7 +77,7 @@ export function JevDrawer({ children }: { children: ReactNode }) {
     <>
       <button
         ref={trigger}
-        className="jev-drawer-trigger"
+        className="jev-devtools jev-drawer-trigger"
         hidden={open}
         aria-label="Open Jev inspector"
         aria-expanded={open}
@@ -83,7 +89,7 @@ export function JevDrawer({ children }: { children: ReactNode }) {
       <section
         ref={panel}
         id={id}
-        className="jev-drawer"
+        className="jev-devtools jev-drawer"
         hidden={!open}
         aria-label="Jev inspector"
         style={{ height: visibleHeight }}

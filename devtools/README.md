@@ -1,79 +1,137 @@
-# Jev Inspector prototype
+# Jev Inspector
 
-A React inspector in a **focused Jev drawer**, using Diagram Motion Lab's dark background, pink connectors, outlined cards, probability bars, and image regions. This is an isolated local prototype; the original lab and `/docs/` stay on port 4178.
+A reusable React inspector with one root component and a Node server adapter. It uses Diagram Motion Lab's rounded outline cards, curved connections, pink flowing dots, and probability bars. The drawer contains searchable request history and Flow, Questions, Context, Transport, and Raw views.
 
-## Run
+This is an **installable prototype**, not a published npm release. Verified with sample responses through the real TypeSafe SDK; no live inference was used for verification.
 
-Requires Node **22.12+** (verified on 24.19).
+## Install in another React project
+
+Requires React 18 or 19. Use Node 22.12+ for the repository tooling (verified on 24.19). The server adapter requires a Node runtime, not an edge runtime.
+
+From this repository:
 
 ```sh
 npm --prefix devtools ci
+cd devtools
+npm pack
+```
+
+From your React project, install the generated archive:
+
+```sh
+npm install /absolute/path/to/diagram-motion-lab/devtools/diagram-motion-lab-jev-devtools-0.1.0.tgz
+```
+
+Mount once near the root. No provider, client object, trace props, or application hook is needed:
+
+```tsx
+import { JevDevtools } from '@diagram-motion-lab/jev-devtools';
+import '@diagram-motion-lab/jev-devtools/styles.css';
+
+export function Root() {
+  return <>
+    <App />
+    <JevDevtools enabled={import.meta.env.DEV} />
+  </>;
+}
+```
+
+For Next.js, mount it in a client component and use `enabled={process.env.NODE_ENV === 'development'}`. CSS is scoped to the drawer; it doesn't restyle your application. Server rendering produces no inspector markup, and browser code is loaded after mounting when enabled. `enabled` defaults to **false**. Disabled components open no connections. This is a runtime opt-in, not a guarantee that every bundler removes inspector assets from production output.
+
+| Prop | Default | Purpose |
+| --- | --- | --- |
+| `enabled` | `false` | Explicitly enable the inspector |
+| `endpoint` | `/api/jev-devtools` | Same-origin path to the server adapter |
+| `defaultOpen` | `true` | Start expanded or as the small Jev launcher |
+
+## Server setup
+
+Create one adapter and one instrumented client per server process. Replace your existing TypeSafe client construction with `inspector.createClient(...)`; continue calling `jev.systemOne(...)` normally. API keys stay on the server.
+
+```ts
+import { createJevDevtools } from '@diagram-motion-lab/jev-devtools/server';
+
+export const inspector = createJevDevtools({
+  enabled: process.env.NODE_ENV === 'development',
+  origin: 'http://localhost:3000', // exact browser origin, including port
+  redact: (path, value) => path.at(-1) === 'email' ? '[redacted]' : value,
+});
+
+export const jev = inspector.createClient({
+  apiKey: process.env.TYPESAFE_API_KEY,
+});
+```
+
+For Express, Connect, or Vite's development server, mount the middleware at the application root, before any fallback route. It delegates unrelated paths:
+
+```ts
+app.use(inspector.middleware);
+// Your existing application handlers call jev.systemOne(...).
+// On server shutdown: inspector.dispose();
+```
+
+For Node frameworks with Web Request/Response handlers, route the endpoint **and its subpaths** to the same adapter instance:
+
+```ts
+// Next.js: app/api/jev-devtools/[[...path]]/route.ts
+import { inspector } from '@/server/jev';
+export const runtime = 'nodejs';
+export const GET = (request: Request) => inspector.handle(request);
+export const DELETE = (request: Request) => inspector.handle(request);
+```
+
+The adapter serves configuration at the base path, snapshots at `/events` via SSE, and `DELETE /clear`. The React component manages subscriptions, reconnection, and cleanup. If your frontend and backend use different ports, proxy this path and the application's inference endpoint through the frontend origin. The browser does not support a cross-origin inspector endpoint. Middleware must receive the original path and matching Host; configure proxies accordingly.
+
+Both API routes and inspector endpoints must share the **same in-memory adapter instance/process**. This prototype doesn't aggregate traces across workers, serverless instances, or edge runtimes. Framework route wiring is illustrated above; the independently tested integration is React + Vite + the Node adapter.
+
+A disabled server adapter exposes no inspector endpoints and `createClient` returns an ordinary SDK client without recording. Capture is limited to `systemOne` calls through that client; it does not intercept unrelated traffic or discover other SDK instances.
+
+## History and access
+
+Default history is shared across local development tabs, bounded to 50 requests. It resets when the process restarts. Clear affects this local history. Only drawer height is stored in localStorage; captured data stays in process/browser memory.
+
+Host and Origin checks reject cross-origin requests. An enabled non-loopback origin requires an `authorize(request)` callback. For a private authenticated environment, apply your existing authentication, and optionally provide `getSession(request)` returning a server-derived user/workspace scope. Then wrap the application's inference handler in `inspector.run(request, () => jev.systemOne(input))` so recording uses the same scope as the inspector's SSE and clear requests. Authentication still belongs to your application; the inspector does not create accounts or infer authorization. Do not derive scopes from an untrusted query parameter. With no `getSession`, all authorized users share the local history.
+
+Credential-named fields are redacted recursively. Custom `redact(path, value)` applies to inputs and responses. Arbitrary secrets in prose are not detected. Captures have depth, collection, image, and text budgets; omitted/truncated data is marked. Request headers/options are not captured. Small PNG/JPEG byte arrays have inline previews; unsupported or large images retain references and sizes.
+
+## Diagrams and request capture
+
+The Flow tab follows the lab's `jev-choice` layout: shared context and question cards feed a result card, then branch into output cards. Select any question from the batch, zoom or fit the diagram, and pause the synchronized flow dots.
+
+- **Choice:** exact returned choice, candidate distribution, and confidence. Alternatives stay visible; the inspector doesn't replace the returned choice with its own argmax decision.
+- **Score:** returned score, distribution, legend, and confidence.
+- **Noul:** probability of true and its complement; no invented confidence or routing threshold.
+- **Box:** normalized region overlay on the captured image, coordinates, and confidence. A Box is not a presence detector.
+
+Connections illustrate data structure, not hidden model reasoning or per-question timing. Application routes/thresholds are not captured. Full instructions and criteria remain in Questions, and full state remains in Context. Cards follow the lab's visual language, but do not apply its illustrative routing policies to real requests.
+
+The recorder preserves the original SDK APIPromise, including response helpers and cancellation. It observes a cloned response without consuming the caller's body. AsyncLocalStorage correlates transport attempts/retries with their logical request. Total latency covers the logical call; attempt latency ends at response headers.
+
+## Local playground and independent example
+
+```sh
 npm run dev:devtools
 ```
 
-Open **http://127.0.0.1:4182/**. Run a sample and resize the bottom drawer by dragging its top edge. Use **Expand / Restore** for a larger view and **Close** (or Escape while focused inside the drawer) to return to the page. The small **Jev** button reopens it. The resize handle also supports Up/Down arrows (Shift for larger steps) and Home/End. Drawer height is remembered locally; closing preserves the selected request, filters, active view, and recording. The inspector supplies a searchable request list plus Flow, Questions, Context, Transport, and Raw views.
+Open **http://127.0.0.1:4182/**. The original lab and unlisted `/docs/` remain on 4178. The playground now uses the same public component and adapter described above.
 
-- **Support triage:** Choice distribution, Score distribution/legend, and Noul probability.
-- **Locate a mug:** Box coordinates over a captured image, plus a separate Noul presence question. A Box is not a presence detector.
-- **Rate limit → retry:** a 429 followed by a successful second attempt, recorded as one logical request.
-- **Failed request / Cancel:** SDK errors and aborts remain visible in history.
+Samples cover triage (Choice, Score, Noul), image regions (Box + Noul), retry after 429, failure, and cancellation. Sample answers and usage are fixed fixtures, even if the context changes. They use the real SDK's serialization/retry paths with a custom fetch and make no inference calls.
 
-Samples use fixed answers, even when context is edited. They pass through the real SDK's serialization, APIPromise, retry, and cancellation paths using its supported custom `fetch` option. They make no inference calls. Token counts, confidence, model IDs, and request IDs in samples are fixtures, not measurements of a real Jev model.
+For optional live mode, copy `.env.example` to `.env.local`, set `TYPESAFE_API_KEY` there, and restart. No key is accepted in the browser. The image example uses the SDK's experimental image contract. Live behavior has not been verified.
+
+To try the minimal independent consumer after `npm pack`:
+
+```sh
+cd examples/react-vite
+npm install
+npm run dev
+```
+
+Open **http://127.0.0.1:4183/**. This example imports only the installed package's public exports, includes a sample-only server, and uses its own light theme to demonstrate CSS isolation.
+
+Resize the drawer by dragging the top edge or using the focused handle's arrow keys, Shift+arrows, Home, and End. Expand/Restore adjusts its size. Close or Escape returns focus to the Jev launcher; closing retains the selected request, filters, and subscription. Unmounting/disabling the component closes the subscription; server capture continues independently.
 
 ![Jev Inspector](../docs/images/jev-devtools.png)
-
-## Architecture and reuse
-
-```text
-React playground → same-origin POST → instrumented TypeSafeClient.systemOne
-                                           ↓
-                                    recorder.transport(fetch)
-                                           ↓
-                                sample response OR TypeSafe API
-                                           ↓
-Browser session ← SSE snapshot ← bounded in-memory recorder
-       ↓
-<JevDevtools> → Jev drawer → question/answer cards
-```
-
-`server/recorder.ts` is the SDK adapter. It wraps `systemOne`, snapshots semantic inputs before serialization, and returns the **original APIPromise**. A cloned response supplies inspector data without consuming the caller's body. AsyncLocalStorage correlates each HTTP attempt with its call, including retries and concurrent requests. Other methods keep the SDK's receiver.
-
-```ts
-import {TypeSafeClient} from '@typesafe-ai/sdk';
-import {JevRecorder} from './server/recorder';
-
-const recorder = new JevRecorder({
-  limit: 50,
-  redact: (path, value) => path.at(-1) === 'email' ? '[redacted]' : value,
-});
-const jev = recorder.instrument(new TypeSafeClient({
-  apiKey: process.env.TYPESAFE_API_KEY,
-  fetch: recorder.transport(globalThis.fetch),
-}), {session: 'your-session', label: 'Classify a ticket', source: 'live'});
-// Use jev.systemOne(...) normally; keep this code on the server.
-```
-
-`src/JevDevtools.tsx` exports the React adapter and panel. Supply the current `Trace[]`, connection status, and async `onClear` callback. The playground keeps its SSE subscription outside the panel so closing it does not interrupt collection. `src/protocol.ts` defines the browser-safe snapshot contract. This is source code to evolve, not a published npm package or drop-in integration for every React framework.
-
-`src/JevDrawer.tsx` provides the non-modal React drawer, with pointer/keyboard resizing, viewport clamping, expand/restore, and focus restoration on close. The inspector uses a session-scoped SSE bridge. The Vite middleware and same-origin guards are local prototype infrastructure. A real application integration will need framework-specific server hooks and authenticated, authorized trace delivery.
-
-## Optional live mode
-
-Copy `.env.example` to **`devtools/.env.local`**, set `TYPESAFE_API_KEY`, and restart. No key is accepted by the browser. Select Live to call Jev with the triage or image example; retry/error fixtures remain sample-only. Live requests may incur API charges. **This prototype was verified with samples only.**
-
-The image example uses `jev-preview` and `TypeSafe-Danger-Zone-Images: true`, per the current SDK/API contract. Image support is experimental. Samples should not be treated as evidence of live model accuracy or capability.
-
-## Capture boundaries
-
-- Captures `systemOne` calls made through the wrapped client; it does not intercept unrelated network traffic or auto-discover all clients.
-- Keeps at most 50 requests **across all sessions** by default; clearing affects only the selected session. Restarting the server loses history. Browser reload reconnects to the same session.
-- The browser stores only its random session ID in sessionStorage; only drawer height is kept in localStorage. Request bodies/results remain in process and browser memory, not durable storage.
-- Credential-named fields are redacted recursively, and the demo also redacts `email`. Custom redaction runs on input and response snapshots. Arbitrary secrets inside free text are **not** automatically detected. SDK request options/headers are not captured. Error messages are bounded, with Bearer tokens redacted.
-- Captures have depth, collection, and text budgets. Small PNG/JPEG byte-array images can have inline previews; Blob/large/unsupported images expose references and sizes. Truncation/omission warnings are visible.
-- Total latency covers the logical call; attempt latency ends at response headers. Jev provides a batch response, so no per-question latency or hidden model reasoning is invented. The diagram represents request structure, not internal neural processing.
-- Results show server-supplied answers, distributions, and confidence. The inspector does not turn a distribution into a new routing decision or add confidence to Noul.
-- Server listens only on `127.0.0.1:4182`, checks Host/Origin, isolates snapshots by random session, and caps concurrent runs. This is not a public multi-user authentication system. Do not expose it over a tunnel.
-- `npm run build` verifies bundling but produces only a local-tool notice: the UI is development-only and the recorder is a Vite serve-only plugin. No production deployment is included.
 
 ## Verification
 
@@ -82,8 +140,9 @@ npm run check
 npm test
 npm run check:devtools
 npm run test:devtools
+npm --prefix devtools run verify:package
 ```
 
-Recorder tests use the real SDK at its public transport boundary: APIPromise response ownership and typing, retries, errors/abort, concurrent sessions, redaction, bounded retention, and multipart image capture. Browser verification covers all scenarios, drawer pointer/keyboard resize, expand/restore, Escape/focus return, state preservation across close/reopen, context/criteria, status filtering, and clearing history.
+Package verification packs the library, installs it into a temporary independent React app, verifies public exports and SSR/disabled behavior, and builds the consumer while asserting that no server recorder or SDK modules enter the browser bundle. Recorder and adapter tests cover response ownership, retries, error/abort, concurrent scopes, redaction, bounded retention, image capture, HTTP/SSE delivery, origin/auth guards, and scoped clearing.
 
-Sources: [TypeSafe JavaScript SDK](https://docs.typesafe.ai/sdk/javascript), [Box](https://docs.typesafe.ai/primitives/box). Dependency versions are pinned in the lockfile.
+Package exports: `@diagram-motion-lab/jev-devtools` (React + browser-safe types), `/styles.css` (scoped styles), and `/server` (Node adapter + recorder). Library output is `lib/`; the playground's production build is separate and intentionally shows only a local-tool notice. No production deployment is included.

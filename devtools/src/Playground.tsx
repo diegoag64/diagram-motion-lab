@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { JevDevtools } from "./JevDevtools";
-import type { Snapshot, Trace } from "./protocol";
+import { JevDevtools } from "./index";
+import "./inspector.css";
 import "./style.css";
 
 const savedSession = sessionStorage.getItem("jev-inspector-session");
@@ -19,8 +19,6 @@ async function post(path: string, body: unknown = {}) {
   return data;
 }
 function App() {
-  const [traces, setTraces] = useState<Trace[]>([]),
-    [connection, setConnection] = useState("connecting");
   const [scenario, setScenario] = useState("triage"),
     [mode, setMode] = useState("sample"),
     [live, setLive] = useState(false);
@@ -30,18 +28,10 @@ function App() {
   const [runId, setRunId] = useState<string>(),
     [feedback, setFeedback] = useState("Ready to capture a request.");
   useEffect(() => {
-    const events = new EventSource(endpoint("events"));
-    events.addEventListener("snapshot", (event) => {
-      const data = JSON.parse((event as MessageEvent).data) as Snapshot;
-      setTraces(data.traces);
-      setConnection("connected");
-    });
-    events.onerror = () => setConnection("reconnecting");
     void fetch(endpoint("config"))
       .then((r) => r.json())
       .then((c) => setLive(c.liveAvailable))
       .catch(() => setFeedback("Cannot connect to the local recorder."));
-    return () => events.close();
   }, []);
   async function run() {
     const id = crypto.randomUUID();
@@ -168,11 +158,7 @@ function App() {
           </section>
         </div>
       </main>
-      <JevDevtools
-        traces={traces}
-        connection={connection}
-        onClear={() => post("clear")}
-      />
+      <JevDevtools enabled={import.meta.env.DEV} endpoint="/api/jev-devtools" />
     </>
   );
 }

@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { JevDrawer } from "./JevDrawer";
-import type { AnswerView, Json, Trace } from "./protocol";
+import { TraceDiagram } from "./TraceDiagram.js";
+import type { AnswerView, Json, Trace } from "./protocol.js";
 const pretty = (value: unknown) => JSON.stringify(value, null, 2);
 const ms = (value?: number) =>
   value === undefined ? "—" : `${Math.round(value)} ms`;
@@ -92,53 +92,6 @@ function Answer({ answer, image }: { answer?: AnswerView; image?: string }) {
         </p>
       )}
     </div>
-  );
-}
-function Flow({ trace }: { trace: Trace }) {
-  const questions = Object.entries(trace.request.questions);
-  const image =
-    findImage(trace.request.state) ||
-    (trace.request.assets ? findImage(trace.request.assets) : undefined);
-  return (
-    <>
-      <p className="muted flow-caption">
-        One request · {questions.length} questions evaluated in parallel · one
-        typed response
-      </p>
-      <div className={`request-flow ${trace.status}`}>
-        <div className="state-node">
-          <span className="eyebrow">Context</span>
-          <h3>Shared state</h3>
-          <p>{image ? "Image + description" : "Structured context"}</p>
-          <code>{trace.request.model}</code>
-          <span className="flow-dot" />
-        </div>
-        <div className="question-branches">
-          {questions.map(([key, question]) => (
-            <article className="question-node" key={key}>
-              <header>
-                <h3>{key}</h3>
-                <span className="type">{question.type}</span>
-              </header>
-              <p className="instructions">
-                {typeof question.instructions === "string"
-                  ? question.instructions
-                  : pretty(question.instructions)}
-              </p>
-              <Answer answer={trace.result?.answers[key]} image={image} />
-              <details>
-                <summary>Question & criteria</summary>
-                <JsonBlock value={question} />
-              </details>
-            </article>
-          ))}
-        </div>
-      </div>
-      <p className="muted">
-        Connections show the request structure. Jev returns the answers
-        together; there is no per-question timing.
-      </p>
-    </>
   );
 }
 export function JevPanel({
@@ -287,21 +240,26 @@ export function JevPanel({
                   {w}
                 </p>
               ))}
-              {tab === "Flow" && <Flow trace={trace} />}
+              {tab === "Flow" && <TraceDiagram key={trace.id} trace={trace} />}
               {tab === "Questions" &&
-                Object.entries(trace.request.questions).map(([key, q]) => (
-                  <article className="question-node standalone" key={key}>
-                    <header>
-                      <h3>{key}</h3>
-                      <span className="type">{q.type}</span>
-                    </header>
-                    <JsonBlock value={q} />
-                    <Answer
-                      answer={trace.result?.answers[key]}
-                      image={findImage(trace.request.state)}
-                    />
-                  </article>
-                ))}
+                Object.entries(trace.request.questions ?? {})
+                  .filter(
+                    ([, q]) =>
+                      q && typeof q === "object" && typeof q.type === "string",
+                  )
+                  .map(([key, q]) => (
+                    <article className="question-node standalone" key={key}>
+                      <header>
+                        <h3>{key}</h3>
+                        <span className="type">{q.type}</span>
+                      </header>
+                      <JsonBlock value={q} />
+                      <Answer
+                        answer={trace.result?.answers[key]}
+                        image={findImage(trace.request.state)}
+                      />
+                    </article>
+                  ))}
               {tab === "Context" && (
                 <>
                   <p className="muted">
@@ -365,16 +323,5 @@ export function JevPanel({
         )}
       </section>
     </div>
-  );
-}
-export function JevDevtools(props: {
-  traces: Trace[];
-  connection: string;
-  onClear: () => Promise<unknown>;
-}) {
-  return (
-    <JevDrawer>
-      <JevPanel {...props} />
-    </JevDrawer>
   );
 }

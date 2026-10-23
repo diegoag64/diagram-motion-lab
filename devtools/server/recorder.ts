@@ -7,7 +7,7 @@ import type {
   SystemOneRequest,
   RequestOptions,
 } from "@typesafe-ai/sdk";
-import type { Json, Trace } from "../src/protocol.ts";
+import type { Json, Trace } from "../src/protocol.js";
 
 const secretKey =
   /^(authorization|cookie|set-cookie|api[-_]?key|password|secret|access[-_]?token|refresh[-_]?token)$/i;
@@ -173,7 +173,9 @@ export class JevRecorder {
   // and method receiver. The inspector reads a clone, never the caller's body.
   instrument<T extends TypeSafeClient>(
     client: T,
-    meta: { session: string; label: string; source: "sample" | "live" },
+    meta:
+      | { session: string; label: string; source: "sample" | "live" }
+      | (() => { session: string; label: string; source: "sample" | "live" }),
   ): T {
     return new Proxy(client, {
       get: (target, property) => {
@@ -206,7 +208,7 @@ export class JevRecorder {
           this.traces.set(id, {
             version: 1,
             id,
-            ...meta,
+            ...(typeof meta === "function" ? meta() : meta),
             startedAt: Date.now(),
             status: "pending",
             request: captured,
