@@ -6,10 +6,10 @@ qa/
 
 .taste-skill/
 
-devtools/dist/
+# Local leftovers after DevTools moved to its own repo.
+devtools/
 .env
 .env.*
 !.env.example
 
-devtools/lib/
 *.tgz
