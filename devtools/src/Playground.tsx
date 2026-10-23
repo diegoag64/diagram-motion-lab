@@ -76,7 +76,7 @@ function App() {
             <p>
               Inspect a request from shared context to typed results.
               <br />
-              Powered by the real TypeSafe SDK and TanStack Devtools.
+              Powered by the real TypeSafe SDK.
             </p>
           </div>
           <section className="run-form" aria-label="Request playground">

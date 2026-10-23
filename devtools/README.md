@@ -1,6 +1,6 @@
 # Jev Inspector prototype
 
-A React plugin inside the **actual TanStack Devtools shell**, using Diagram Motion Lab's dark background, pink connectors, outlined cards, probability bars, and image regions. This is an isolated local prototype; the original lab and `/docs/` stay on port 4178.
+A React inspector in a **focused Jev drawer**, using Diagram Motion Lab's dark background, pink connectors, outlined cards, probability bars, and image regions. This is an isolated local prototype; the original lab and `/docs/` stay on port 4178.
 
 ## Run
 
@@ -11,7 +11,7 @@ npm --prefix devtools ci
 npm run dev:devtools
 ```
 
-Open **http://127.0.0.1:4182/**. Run a sample and expand the bottom panel by dragging its top edge. TanStack supplies resizing, docking, closing, and reopening. The Jev plugin supplies a searchable request list plus Flow, Questions, Context, Transport, and Raw views.
+Open **http://127.0.0.1:4182/**. Run a sample and resize the bottom drawer by dragging its top edge. Use **Expand / Restore** for a larger view and **Close** (or Escape while focused inside the drawer) to return to the page. The small **Jev** button reopens it. The resize handle also supports Up/Down arrows (Shift for larger steps) and Home/End. Drawer height is remembered locally; closing preserves the selected request, filters, active view, and recording. The inspector supplies a searchable request list plus Flow, Questions, Context, Transport, and Raw views.
 
 - **Support triage:** Choice distribution, Score distribution/legend, and Noul probability.
 - **Locate a mug:** Box coordinates over a captured image, plus a separate Noul presence question. A Box is not a presence detector.
@@ -33,7 +33,7 @@ React playground → same-origin POST → instrumented TypeSafeClient.systemOne
                                            ↓
 Browser session ← SSE snapshot ← bounded in-memory recorder
        ↓
-<JevDevtools> → TanStack shell → question/answer cards
+<JevDevtools> → Jev drawer → question/answer cards
 ```
 
 `server/recorder.ts` is the SDK adapter. It wraps `systemOne`, snapshots semantic inputs before serialization, and returns the **original APIPromise**. A cloned response supplies inspector data without consuming the caller's body. AsyncLocalStorage correlates each HTTP attempt with its call, including retries and concurrent requests. Other methods keep the SDK's receiver.
@@ -55,7 +55,7 @@ const jev = recorder.instrument(new TypeSafeClient({
 
 `src/JevDevtools.tsx` exports the React adapter and panel. Supply the current `Trace[]`, connection status, and async `onClear` callback. The playground keeps its SSE subscription outside the panel so closing it does not interrupt collection. `src/protocol.ts` defines the browser-safe snapshot contract. This is source code to evolve, not a published npm package or drop-in integration for every React framework.
 
-The plugin intentionally uses its own session-scoped SSE bridge, not TanStack's shared server event bus. The Vite middleware and same-origin guards are local prototype infrastructure. A real application integration will need framework-specific server hooks and authenticated, authorized trace delivery.
+`src/JevDrawer.tsx` provides the non-modal React drawer, with pointer/keyboard resizing, viewport clamping, expand/restore, and focus restoration on close. The inspector uses a session-scoped SSE bridge. The Vite middleware and same-origin guards are local prototype infrastructure. A real application integration will need framework-specific server hooks and authenticated, authorized trace delivery.
 
 ## Optional live mode
 
@@ -67,7 +67,7 @@ The image example uses `jev-preview` and `TypeSafe-Danger-Zone-Images: true`, pe
 
 - Captures `systemOne` calls made through the wrapped client; it does not intercept unrelated network traffic or auto-discover all clients.
 - Keeps at most 50 requests **across all sessions** by default; clearing affects only the selected session. Restarting the server loses history. Browser reload reconnects to the same session.
-- The browser stores only its random session ID in sessionStorage; TanStack persists its own layout preferences. Request bodies/results remain in process and browser memory, not durable storage.
+- The browser stores only its random session ID in sessionStorage; only drawer height is kept in localStorage. Request bodies/results remain in process and browser memory, not durable storage.
 - Credential-named fields are redacted recursively, and the demo also redacts `email`. Custom redaction runs on input and response snapshots. Arbitrary secrets inside free text are **not** automatically detected. SDK request options/headers are not captured. Error messages are bounded, with Bearer tokens redacted.
 - Captures have depth, collection, and text budgets. Small PNG/JPEG byte-array images can have inline previews; Blob/large/unsupported images expose references and sizes. Truncation/omission warnings are visible.
 - Total latency covers the logical call; attempt latency ends at response headers. Jev provides a batch response, so no per-question latency or hidden model reasoning is invented. The diagram represents request structure, not internal neural processing.
@@ -84,6 +84,6 @@ npm run check:devtools
 npm run test:devtools
 ```
 
-Recorder tests use the real SDK at its public transport boundary: APIPromise response ownership and typing, retries, errors/abort, concurrent sessions, redaction, bounded retention, and multipart image capture. Browser verification covers all scenarios, drawer resize/reopen, context/criteria, status filtering, and clearing history.
+Recorder tests use the real SDK at its public transport boundary: APIPromise response ownership and typing, retries, errors/abort, concurrent sessions, redaction, bounded retention, and multipart image capture. Browser verification covers all scenarios, drawer pointer/keyboard resize, expand/restore, Escape/focus return, state preservation across close/reopen, context/criteria, status filtering, and clearing history.
 
-Sources: [TanStack React adapter](https://tanstack.com/devtools/latest/docs/framework/react/adapter), [custom plugins](https://tanstack.com/devtools/latest/docs/building-custom-plugins), [TypeSafe JavaScript SDK](https://docs.typesafe.ai/sdk/javascript), [Box](https://docs.typesafe.ai/primitives/box). Versions are pinned in the lockfile; TanStack Devtools APIs are still evolving.
+Sources: [TypeSafe JavaScript SDK](https://docs.typesafe.ai/sdk/javascript), [Box](https://docs.typesafe.ai/primitives/box). Dependency versions are pinned in the lockfile.

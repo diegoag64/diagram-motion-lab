@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { TanStackDevtools } from "@tanstack/react-devtools";
+import { JevDrawer } from "./JevDrawer";
 import type { AnswerView, Json, Trace } from "./protocol";
 const pretty = (value: unknown) => JSON.stringify(value, null, 2);
 const ms = (value?: number) =>
@@ -373,23 +373,8 @@ export function JevDevtools(props: {
   onClear: () => Promise<unknown>;
 }) {
   return (
-    <TanStackDevtools
-      config={{
-        defaultOpen: true,
-        panelLocation: "bottom",
-        position: "bottom-right",
-        theme: "dark",
-        hideUntilHover: false,
-      }}
-      eventBusConfig={{ connectToServerBus: false }}
-      plugins={[
-        {
-          id: "jev",
-          name: "Jev Inspector",
-          defaultOpen: true,
-          render: <JevPanel {...props} />,
-        },
-      ]}
-    />
+    <JevDrawer>
+      <JevPanel {...props} />
+    </JevDrawer>
   );
 }

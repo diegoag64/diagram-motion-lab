@@ -791,3 +791,109 @@ summary {
     font-size: 12px;
   }
 }
+
+/* The drawer owns only layout. Recording and inspector state live independently. */
+.jev-drawer {
+  position: fixed;
+  z-index: 1000;
+  inset: auto 0 0;
+  display: flex;
+  flex-direction: column;
+  background: #0d0a0f;
+  color: #eee8ed;
+  border-top: 1px solid #604058;
+  box-shadow: 0 -12px 48px #0005;
+  font:
+    12px "DM Sans",
+    sans-serif;
+}
+.jev-drawer[hidden],
+.jev-drawer-trigger[hidden] {
+  display: none;
+}
+.jev-drawer-resize {
+  position: absolute;
+  z-index: 1;
+  top: -6px;
+  width: 100%;
+  height: 12px;
+  cursor: ns-resize;
+  touch-action: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.jev-drawer-resize span {
+  width: 42px;
+  height: 3px;
+  border-radius: 3px;
+  background: #79506f;
+}
+.jev-drawer-resize:hover span,
+.jev-drawer-resize:focus-visible span {
+  background: #e551ba;
+}
+.jev-drawer-resize:focus-visible {
+  outline: 2px solid #e551ba;
+  outline-offset: -2px;
+}
+.jev-drawer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex: 0 0 46px;
+  padding: 0 16px;
+  border-bottom: 1px solid #302634;
+}
+.jev-drawer-header strong {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-weight: 600;
+}
+.jev-mark {
+  color: #e551ba;
+  font-size: 21px;
+}
+.jev-drawer-header > div {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.jev-drawer-header button {
+  background: transparent;
+  border-color: transparent;
+  font-size: 11px;
+  color: #c4afc8;
+}
+.jev-drawer-header .jev-drawer-close {
+  font-size: 22px;
+  line-height: 1;
+  padding: 4px 8px;
+}
+.jev-drawer-content {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+.jev-drawer-trigger {
+  position: fixed;
+  bottom: 18px;
+  right: 18px;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 16px;
+  border: 1px solid #a24487;
+  background: #211321;
+  color: #f1cbe6;
+  font:
+    600 13px "DM Sans",
+    sans-serif;
+  box-shadow: 0 4px 20px #0005;
+}
+.jev-drawer-trigger span {
+  color: #e551ba;
+  font-size: 20px;
+}

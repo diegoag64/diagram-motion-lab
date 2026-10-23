@@ -16,7 +16,7 @@ Open http://127.0.0.1:4178. `npm test` checks graph editing and layout contracts
 
 ## Jev devtools prototype
 
-An isolated React app in [`devtools/`](devtools/README.md) uses the actual TanStack Devtools shell to inspect Jev calls with our diagram styles. It includes sample Choice, Score, Noul, and Box requests, retries, errors, and cancellation. Requires Node 22.12+: `npm --prefix devtools ci`, then `npm run dev:devtools` (port 4182). The existing lab remains dependency-free.
+An isolated React app in [`devtools/`](devtools/README.md) uses a focused, resizable Jev drawer to inspect Jev calls with our diagram styles. It includes sample Choice, Score, Noul, and Box requests, retries, errors, and cancellation. Requires Node 22.12+: `npm --prefix devtools ci`, then `npm run dev:devtools` (port 4182). The existing lab remains dependency-free.
 
 ## Playground
 
