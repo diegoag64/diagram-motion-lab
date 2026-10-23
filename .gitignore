@@ -5,3 +5,8 @@ node_modules/
 qa/
 
 .taste-skill/
+
+devtools/dist/
+.env
+.env.*
+!.env.example
