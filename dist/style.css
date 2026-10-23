@@ -196,3 +196,27 @@ textarea {resize:vertical;min-height:60px;max-height:120px}
 
 /* Preserve the explicit reference hue on the Jev graph. */
 #diagram[data-preset=jev] {--accent:#E551BA;--accent-tint:color-mix(in srgb,#E551BA 12%,var(--paper))}
+
+.preset-group{font:500 10px var(--mono);text-transform:uppercase;letter-spacing:.09em;color:var(--muted);padding:12px 8px 6px}
+.preset-head{white-space:normal;font-size:12px}.preset{height:auto;min-height:36px}.preset-preview{width:28px}
+.block-library{padding:22px 8px 0}.block-library .help{font-size:11px;margin:8px 0}
+#block-palette{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+#block-palette button{border:1px solid var(--control);border-radius:5px;min-height:38px;padding:6px;text-align:left;font-size:11px}
+.jev-guide{display:flex;justify-content:space-between;gap:12px;margin:-4px 0 14px;font-size:11px;color:var(--muted)}.jev-guide[hidden]{display:none}.jev-guide a{text-decoration:underline;text-underline-offset:3px}
+.jev-flow .canvas{height:620px}.box-flow .canvas{height:740px}
+#diagram[data-preset^="jev-"],.card-studio[data-preset^="jev-"]{--accent:#E551BA;--accent-tint:color-mix(in srgb,#E551BA 12%,var(--paper))}
+.primitive-editor,.connection-editor{margin-top:24px;padding-top:20px;border-top:1px solid var(--rule)}
+.primitive-editor[hidden],.details-field[hidden]{display:none}
+h3{font:500 14px var(--sans);margin:0 0 10px}
+.primitive-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 24px;margin-top:16px;max-width:780px}
+.primitive-field{display:flex;flex-direction:column;gap:6px;font-size:12px;color:var(--muted)}
+.primitive-field:has(textarea),.primitive-field:has(input[type=file]){grid-column:1/-1}
+.primitive-field input[type=number]{width:100%;padding:8px 10px;border:1px solid var(--control);border-radius:5px;background:var(--surface);font:13px var(--mono);color:var(--ink)}
+.primitive-field input[type=file]{font-size:12px;max-width:100%}.primitive-field textarea{max-height:240px}
+.primitive-field output{color:var(--ink);font:12px var(--mono)}
+.primitive-error{color:var(--accent);font-size:12px;min-height:0;margin:8px 0}.primitive-error:empty{display:none}
+.answer-json{margin-top:18px;font-size:12px}.answer-json summary{cursor:pointer}.answer-json pre{overflow:auto;font:12px/1.7 var(--mono);background:var(--paper);border:1px solid var(--rule);border-radius:6px;padding:16px;max-height:320px}
+.connection-fields{display:flex;gap:12px;align-items:end;flex-wrap:wrap;margin:12px 0}.connection-fields label{display:flex;flex-direction:column;gap:8px;font-size:12px;color:var(--muted)}.connection-fields select{background:var(--surface);border:1px solid var(--control);padding:8px;max-width:260px;border-radius:5px;font-size:13px}.connection-fields button{min-height:38px}
+@media(max-width:640px){.jev-flow .canvas{height:1350px}.box-flow .canvas{height:1750px}.primitive-fields{gap:12px}.jev-guide{flex-wrap:wrap}.connection-fields{display:grid;grid-template-columns:1fr 1fr}.connection-fields label{grid-column:1/-1}.connection-fields select{max-width:none}.primitive-field input[type=number]{font-size:16px;min-height:44px}}
+
+.option-tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center}

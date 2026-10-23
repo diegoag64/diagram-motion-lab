@@ -1,5 +1,7 @@
+import {BLOCKS,validVisual,refreshRoutes,connectBlocks,addRoutes,updateVisual} from './jev-primitives.js';
+import {PrimitiveEditor} from './primitive-editor.js';
 import {CARD_THEMES} from './card-themes.js';
-import {PRESETS,createGraph,duration,clone,grow,removeBranch,MAX_NODES} from './model.js';
+import {PRESETS,createGraph,duration,clone,grow,removeBranch,addBlock,MAX_NODES} from './model.js';
 import {Renderer} from './renderer.js';
 const $=id=>document.getElementById(id);
 const STORAGE='diagram-motion-lab-v1';
@@ -17,12 +19,14 @@ function validGraph(g) {
   for(const n of g.nodes) {
     if(!/^n\d+$/.test(n.id)||Number(n.id.slice(1))>=g.nextId||typeof n.label!=='string'||n.label.length>40||typeof n.subtitle!=='string'||n.subtitle.length>120||!Number.isFinite(n.born)||n.born<0||n.born>1000)return false;
     if(n.width!==undefined&&(!Number.isFinite(n.width)||n.width<100||n.width>400))return false;
-    if(n.height!==undefined&&(!Number.isFinite(n.height)||n.height<50||n.height>300))return false;
+    if(n.visual&&!validVisual(n.visual))return false;
+    if(n.height!==undefined&&(!Number.isFinite(n.height)||n.height<50||n.height>600))return false;
     if(g.layoutMode==='authored'&&[n.position,n.compactPosition].some(p=>!p||!Number.isFinite(p.x)||!Number.isFinite(p.y)))return false;
     const seen=new Set([n.id]);let p=n.parent;
     while(p!==null) {if(!ids.has(p)||seen.has(p))return false;seen.add(p);p=g.nodes.find(n=>n.id===p).parent;}
   }
   if(g.groups!==undefined&&(!Array.isArray(g.groups)||g.groups.some(group=>typeof group.label!=='string'||!Array.isArray(group.members)||!group.members.length||group.members.some(id=>!ids.has(id)))))return false;
+  if(g.edges.some(e=>e.when&&(!ids.has(e.when.node)||!['option','review','above','below','yes','no','not-yes'].includes(e.when.mode)||(e.when.mode==='option'&&(!Number.isInteger(e.when.option)||e.when.option<0)))))return false;
   return new Set(g.edges.map(e=>e.id)).size===g.edges.length && g.edges.every(e=>ids.has(e.from)&&ids.has(e.to)&&e.from!==e.to&&(!e.fromGroup||g.groups?.some(g=>g.id===e.fromGroup))&&(!e.toGroup||g.groups?.some(g=>g.id===e.toGroup)));
 }
 if(validGraph(saved.graph)) {graph=saved.graph;selected=graph.nodes.some(n=>n.id===saved.selected)?saved.selected:graph.nodes[0].id;time=duration(graph);}
@@ -44,17 +48,19 @@ if(graph.preset==='jev'&&graph.referenceVersion!==2) {
   for(const group of graph.groups||[])if(group.id==='model')Object.assign(group,{eyebrow:'',padding:reference.groups[0].padding,titleAlign:'center'});
   Object.assign(graph,{referenceVersion:2,scenePadding:8,showNodeNumbers:false});
 }
+if(graph.preset.startsWith('jev-')&&(!saved.graph||requestedPreset!==saved.graph.preset)){selected='n2';time=duration(graph);}
 if(['signal','stream','draw'].includes(saved.mode))mode=saved.mode;
 if(typeof saved.flowEnabled==='boolean')flowEnabled=saved.flowEnabled;
 if(Number.isFinite(saved.flowSpeed)&&saved.flowSpeed>=.3&&saved.flowSpeed<=2.5)flowSpeed=saved.flowSpeed;
 document.documentElement.dataset.theme=saved.theme==='dark'?'dark':'light';
 $('dots').checked=saved.dots===true;$('canvas').classList.toggle('no-dots',!$('dots').checked);
 $('flow-speed').value=flowSpeed;$('flow-label').textContent=`${flowSpeed}×`;$('flow-enabled').checked=flowEnabled;
+refreshRoutes(graph);
 const renderer=new Renderer($('diagram'),select,percent=>$('zoom-label').textContent=`${percent}%`);renderer.reduced=reduced.matches;
 // The lab opens the entire composition at every width; zoom remains available for detail.
 const labFitObserver=new ResizeObserver(()=>{if($('diagram').clientWidth>0)renderer.fit(false);});labFitObserver.observe($('diagram'));
 function persist() {
-  try {localStorage.setItem(STORAGE,JSON.stringify({graph,selected,mode,flowEnabled,flowSpeed,cardTheme,theme:document.documentElement.dataset.theme,dots:$('dots').checked}));}catch{}
+  try {localStorage.setItem(STORAGE,JSON.stringify({graph,selected,mode,flowEnabled,flowSpeed,cardTheme,theme:document.documentElement.dataset.theme,dots:$('dots').checked}));}catch{toast('Browser storage is full. Export your SVG before leaving.');}
 }
 function syncCardTheme() {
   $('diagram').dataset.cardTheme=cardTheme;
@@ -85,13 +91,19 @@ const presetLabels={jev:'Typed answers · Jev',branches:'Branching ideas',pipeli
 for(const p of PRESETS) {
   const button=document.createElement('button');button.className='preset';button.dataset.preset=p.id;
   // Only bundled, authored preset names and SVG thumbnails enter this markup.
-  button.innerHTML=`<span class="preset-head">${presetLabels[p.id]}</span><svg class="preset-preview" viewBox="0 0 150 38" aria-hidden="true"><g stroke="currentColor" stroke-width="1" fill="var(--paper)">${previews[p.id]}</g></svg>`;
-  button.addEventListener('click',()=>{if(graph.preset===p.id){closeLibrary();return;}snapshot();graph=createGraph(p.id);selected='n0';time=reduced.matches?duration(graph):0;flowTime=0;playing=!reduced.matches;syncGraph(true);closeLibrary();toast(`${p.name} loaded`);});$('presets').append(button);
+  button.innerHTML=`<span class="preset-head">${presetLabels[p.id]||p.name}</span><svg class="preset-preview" viewBox="0 0 150 38" aria-hidden="true"><g stroke="currentColor" stroke-width="1" fill="var(--paper)">${previews[p.id]||previews.fanout}</g></svg>`;
+  button.addEventListener('click',()=>{if(graph.preset===p.id){closeLibrary();return;}snapshot();graph=createGraph(p.id);selected=p.kind==='jev-primitive'?'n2':'n0';time=reduced.matches||p.kind==='jev-primitive'?duration(graph):0;flowTime=0;playing=!reduced.matches;syncGraph(true);closeLibrary();toast(`${p.name} loaded`);});if(p.id==='jev-choice'){const heading=document.createElement('div');heading.className='preset-group';heading.textContent='Jev primitives';$('presets').append(heading);}if(p.id==='jev'){const heading=document.createElement('div');heading.className='preset-group';heading.textContent='Diagram templates';$('presets').append(heading);}$('presets').append(button);
 }
 function select(id) {selected=id;renderer.select(id);syncInspector();persist();}
 function syncInspector() {
   const node=graph.nodes.find(n=>n.id===selected)||graph.nodes[0];selected=node.id;
   $('selected-title').textContent=node.label;$('selected-id').textContent=node.id.toUpperCase();$('node-label').value=node.label;$('node-subtitle').value=node.subtitle;
+  $('node-subtitle').closest('.details-field').hidden=!!node.visual;
+  primitiveEditor.render(node);
+  $('connect-target').replaceChildren();for(const target of graph.nodes.filter(n=>n.id!==selected)){const option=document.createElement('option');option.value=target.id;option.textContent=target.label;$('connect-target').append(option);}
+  $('connect').disabled=graph.nodes.length<2;
+  $('add-routes').disabled=!['choice','score','noul'].includes(node.visual?.type)||graph.edges.some(e=>e.from===node.id&&e.when);
+  document.querySelectorAll('[data-block]').forEach(b=>b.disabled=node.kind==='junction'||graph.nodes.length>=MAX_NODES);
   $('remove').disabled=node.parent===null||node.kind==='junction';$('grow').disabled=node.kind==='junction'||graph.nodes.length+Number($('branch-count').value)>MAX_NODES;
 }
 function syncPlayback() {
@@ -101,19 +113,23 @@ function syncPlayback() {
   $('canvas-state').textContent=reduced.matches?'Reduced motion':playing?'Playing':'Paused';
   $('play').disabled=reduced.matches;$('replay').disabled=reduced.matches;$('timeline').disabled=reduced.matches;
 }
-function syncGraph(instant=false) {
+function syncGraph(instant=false,{keepInspector=false}={}) {
+  refreshRoutes(graph);
   const p=PRESETS.find(p=>p.id===graph.preset);
+  const url=new URL(location.href);url.searchParams.set('preset',p.id);window.history.replaceState(null,'',url);
   document.querySelector('.card-studio').dataset.preset=graph.preset;
-  document.querySelector('.workspace').classList.toggle('wide-diagram',!!p.wide);
+  document.querySelector('.workspace').classList.toggle('wide-diagram',!!p.wide||graph.nodes.some(n=>n.visual));
   $('collection-count').textContent=String(PRESETS.length);
-  $('primitive-note').hidden=!p.wide;
+  $('primitive-note').hidden=p.id!=='jev';
+  const typed=graph.nodes.some(n=>n.visual);document.querySelector('.workspace').classList.toggle('jev-flow',typed);document.querySelector('.workspace').classList.toggle('box-flow',p.id==='jev-box');
+  $('jev-guide').hidden=!typed;$('jev-docs').href=p.docs||'https://docs.typesafe.ai/primitives';
   $('diagram-title').textContent=p.name;$('diagram-caption').textContent=p.caption;$('description').textContent=p.description;$('preset-number').textContent=p.tag;
   $('diagram').querySelector('title').textContent=p.name;$('diagram').setAttribute('aria-label',`${p.name}. Select a node to edit or grow branches.`);
   $('node-count').textContent=`${graph.nodes.filter(n=>n.kind!=='junction').length} nodes · ${graph.edges.length} connections`;
   document.querySelectorAll('.preset').forEach(b=>{b.classList.toggle('active',b.dataset.preset===p.id);b.setAttribute('aria-pressed',String(b.dataset.preset===p.id));});
   if(reduced.matches)time=duration(graph);
   renderer.setGraph(graph,selected,{instant});renderer.fit(false);renderer.render(time,flowTime,mode,flowEnabled);
-  syncInspector();syncPlayback();persist();
+  if(!keepInspector)syncInspector();else for(const option of $('connect-target').options){option.textContent=graph.nodes.find(n=>n.id===option.value)?.label||option.textContent;}syncPlayback();persist();
 }
 function syncModes() {document.querySelectorAll('[data-mode]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.mode===mode)));}
 $('grow').addEventListener('click',()=>{
@@ -127,7 +143,7 @@ for(const [id,key] of [['node-label','label'],['node-subtitle','subtitle']]) {
   $(id).addEventListener('focus',()=>editStarted=false);
   $(id).addEventListener('input',()=>{
     if(!editStarted){snapshot();editStarted=true;}
-    const n=graph.nodes.find(n=>n.id===selected);n[key]=$(id).value|| (key==='label'?'Untitled':'');
+    const n=graph.nodes.find(n=>n.id===selected);if(n.generatedRoute)n.generatedRoute=false;n[key]=$(id).value|| (key==='label'?'Untitled':'');
     if(key==='subtitle'){
       n.subtitle=n.subtitle.split('\n').slice(0,4).join('\n');if($(id).value!==n.subtitle)$(id).value=n.subtitle;
       const lines=n.subtitle.split('\n').length;if(lines>1){n.height=Math.max(n.height||76,56+lines*21);n.width=Math.max(n.width||156,184);}
@@ -166,6 +182,10 @@ function tick(now) {
   renderer.render(time,flowTime,mode,flowEnabled,now);syncPlayback();frame=requestAnimationFrame(tick);
 }
 document.addEventListener('visibilitychange',()=>{last=performance.now();if(document.hidden){cancelAnimationFrame(frame);}else{frame=requestAnimationFrame(tick);}});
+const primitiveEditor=new PrimitiveEditor($('primitive-editor'),{getNode:()=>graph.nodes.find(n=>n.id===selected),change:(visual,structure=false)=>{const next=updateVisual(graph,selected,visual);snapshot();graph=next;syncGraph(true,{keepInspector:!structure});primitiveEditor.updateAnswer(visual);}});
+for(const [type,label] of BLOCKS){const button=document.createElement('button');button.type='button';button.dataset.block=type;button.textContent=label;button.addEventListener('click',()=>{try{const next=addBlock(graph,selected,type,time);snapshot();graph=next;selected=graph.nodes.at(-1).id;time=duration(graph);syncGraph(true);closeLibrary();toast(label+' connected');}catch(error){toast(error.message);}});$('block-palette').append(button);}
+$('connect').addEventListener('click',()=>{try{const next=connectBlocks(graph,selected,$('connect-target').value,$('connect-label').value);snapshot();graph=next;syncGraph(true);$('connect-label').value='';toast('Connection added');}catch(error){toast(error.message);}});
+$('add-routes').addEventListener('click',()=>{try{const next=addRoutes(graph,selected);snapshot();graph=next;time=duration(graph);syncGraph(true);toast('Code routes added');}catch(error){toast(error.message);}});
 syncModes();syncThemeButton();syncGraph(true);syncCardTheme();document.fonts.ready.then(()=>{for(const n of graph.nodes)renderer.updateLabel(n);renderer.fit(false);});frame=requestAnimationFrame(tick);
 
 function closeLibrary() {document.body.classList.remove('tools-open');$('library-toggle').setAttribute('aria-expanded','false');$('library-toggle').textContent='Tools';document.querySelector('.work-sheet').inert=false;}

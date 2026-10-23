@@ -46,3 +46,23 @@ svg[data-preset=jev] [data-node=n5] .node-name { font-weight:600; }
 /* Keep wide monospace labels intact without shrinking the other themes. */
 svg[data-preset=jev][data-card-theme=terminal] .node-name,
 svg[data-preset=jev][data-card-theme=terminal] .node-subtitle { font-size:15px; letter-spacing:-.4px; }
+
+/* Typed Jev blocks share the existing card themes and static SVG export. */
+.typed-node .node-name,.typed-node .node-subtitle,.typed-node .node-index{display:none}
+.primitive-content{--primitive-scene:color-mix(in srgb,var(--ink) 5%,var(--canvas));--primitive-table:color-mix(in srgb,var(--ink) 12%,var(--canvas));--primitive-object:color-mix(in srgb,var(--ink) 20%,var(--canvas));--primitive-mug:color-mix(in srgb,var(--accent) 20%,var(--canvas))}
+.primitive-eyebrow{fill:var(--accent);font:500 10px var(--mono);letter-spacing:1px}
+.primitive-title{fill:var(--ink);font:500 18px var(--sans)}
+.primitive-text,.primitive-option{fill:var(--ink);font:400 15px var(--sans)}
+.primitive-value,.primitive-coordinates{fill:var(--ink);font:400 13px var(--mono)}
+.primitive-big{fill:var(--ink);font:500 36px var(--sans)}
+.primitive-small{fill:var(--muted);font:400 12px var(--sans)}
+.primitive-result{fill:var(--ink);font:500 14px var(--sans)}
+.probability-track{fill:var(--ink);fill-opacity:.10}
+.probability-fill{fill:var(--accent);fill-opacity:.4}.probability-fill.winning,.probability-marker{fill:var(--accent);fill-opacity:1}
+.primitive-line{fill:none;stroke:var(--muted);stroke-width:1}
+.threshold-mark{fill:none;stroke:var(--ink);stroke-width:1;stroke-dasharray:2 2}
+.bounding-box{fill:var(--accent);fill-opacity:.08;stroke:var(--accent);stroke-width:2;stroke-dasharray:6 3}
+.route-inactive .edge-base{opacity:.25}.route-selected .edge-base{stroke:var(--accent);stroke-width:1.5;opacity:.85}
+svg[data-card-theme] .route-active .node-box{stroke:var(--accent)}
+.route-idle .primitive-content{opacity:.6}
+[data-card-theme=terminal] .primitive-title,[data-card-theme=terminal] .primitive-text,[data-card-theme=terminal] .primitive-option{font-family:var(--mono);font-size:14px}

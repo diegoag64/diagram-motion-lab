@@ -1,7 +1,9 @@
+import {JEV_PRESETS,createJevGraph,makeBlock,refreshRoutes} from './jev-primitives.js';
 export const NODE_W = 156;
 export const NODE_H = 76;
 export const MAX_NODES = 40;
 export const PRESETS = [
+  ...JEV_PRESETS,
   { id:'jev', name:'One request, typed answers', tag:'07', kind:'composition', caption:'Your state and questions. One model call. Answers your code can use.', description:'Two inputs merge into one request. Jev evaluates each question against the state in parallel, then returns typed answers with probabilities and confidence for some types. Your code branches, sorts, and routes the result.', wide:true },
   { id:'branches', name:'Branching ideas', tag:'01', kind:'tree', caption:'One thought. Many possibilities.', description:'Start with an idea, then let it unfold. Select any node and grow a new branch.', labels:['An idea','Explore','Make','Research','Connect','Prototype','Refine'], subs:['the starting point','ask better questions','give it form','find the signal','spot a pattern','make it tangible','follow the feedback'], parents:[null,0,0,1,1,2,2], focal:0 },
   { id:'pipeline', name:'A flowing pipeline', tag:'02', kind:'pipeline', caption:'Follow the work, from start to finish.', description:'A clear sequence of handoffs. Try a flowing stream or a single traveling signal.', labels:['Input','Transform','Validate','Output'], subs:['raw material','shape the data','check the result','ready to use'], parents:[null,0,1,2], focal:1 },
@@ -13,6 +15,7 @@ export const PRESETS = [
 
 export function createGraph(id) {
   const p = PRESETS.find(p => p.id === id) || PRESETS[0];
+  if(p.kind==='jev-primitive')return createJevGraph(p.id.slice(4));
   if(p.id==='jev') return {
     preset:'jev',layoutMode:'authored',nextId:6,referenceVersion:2,scenePadding:8,showNodeNumbers:false,
     nodes:[
@@ -69,7 +72,7 @@ export function removeBranch(graph,id) {
   const removed=new Set([id]);
   let changed=true;
   while(changed) { changed=false; for(const n of graph.nodes) if(removed.has(n.parent)&&!removed.has(n.id)){removed.add(n.id);changed=true;} }
-  return {...clone(graph),nodes:graph.nodes.filter(n=>!removed.has(n.id)).map(n=>({...n})),edges:graph.edges.filter(e=>!removed.has(e.from)&&!removed.has(e.to)).map(e=>({...e})),groups:(graph.groups||[]).map(g=>({...g,members:g.members.filter(id=>!removed.has(id))})).filter(g=>g.members.length)};
+  return {...clone(graph),nodes:graph.nodes.filter(n=>!removed.has(n.id)).map(n=>({...n})),edges:graph.edges.filter(e=>!removed.has(e.from)&&!removed.has(e.to)&&!removed.has(e.when?.node)).map(e=>({...e})),groups:(graph.groups||[]).map(g=>({...g,members:g.members.filter(id=>!removed.has(id))})).filter(g=>g.members.length)};
 }
 
 // Primary-parent links determine layout. Cross-links never change tree depth.
@@ -131,4 +134,12 @@ export function edgeGeometry(a,b,feedback=false,vertical=false) {
 export function bezierPoint(points,t) {
   const s=1-t;const weights=[s*s*s,3*s*s*t,3*s*t*t,t*t*t];
   return {x:points.reduce((sum,p,i)=>sum+p.x*weights[i],0),y:points.reduce((sum,p,i)=>sum+p.y*weights[i],0)};
+}
+
+export function addBlock(graph,parentId,type,now){
+  const next=grow(graph,parentId,1,now),placeholder=next.nodes.at(-1);
+  const block=makeBlock(placeholder.id,type,({state:'State',question:'Question',choice:'Category probabilities',score:'Level distribution',noul:'P(condition holds)',image:'Image evidence',box:'Target region',action:'Next action'})[type],parentId,placeholder.born);
+  if(!block.label)throw new Error('Choose a supported block type.');
+  if(type==='box'&&graph.nodes.find(n=>n.id===parentId)?.visual?.type==='image')block.visual.imageFrom=parentId;
+  Object.assign(placeholder,block);next.showNodeNumbers=false;return refreshRoutes(next);
 }
