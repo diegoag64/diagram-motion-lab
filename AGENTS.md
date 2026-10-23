@@ -6,3 +6,5 @@
 - Keep changes scoped. The lab and the unlisted `/docs/` page share the SVG renderer; verify both when changing shared rendering.
 - Run `npm run check`, `npm test`, and `git diff --check` before opening or updating a PR. Visually verify UI changes in the browser. Add tests for meaningful behavior, not screenshots of source code or copies of implementation.
 - Jev illustrations must follow the current official TypeSafe docs and distinguish sample answers from live inference. No API credentials belong in this static client.
+
+- Jev DevTools was extracted to https://github.com/diegoag64/jev-devtools. Make inspector/package changes there; this repository owns the static lab and `/docs/` replica.

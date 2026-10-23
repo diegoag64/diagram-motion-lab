@@ -6,9 +6,6 @@
   "scripts": {
     "dev": "node server.mjs",
     "test": "node --test tests/*.test.mjs",
-    "check": "node --check dist/app.js && node --check dist/model.js && node --check dist/renderer.js && node --check dist/card-themes.js && node --check dist/jev-primitives.js && node --check dist/primitive-renderer.js && node --check dist/primitive-editor.js && node --check dist/docs/app.js && node --check dist/docs/viewer.js && node --check server.mjs",
-    "dev:devtools": "npm --prefix devtools run dev",
-    "check:devtools": "npm --prefix devtools run check && npm --prefix devtools run build && npm --prefix devtools run build:package",
-    "test:devtools": "npm --prefix devtools test"
+    "check": "node --check dist/app.js && node --check dist/model.js && node --check dist/renderer.js && node --check dist/card-themes.js && node --check dist/jev-primitives.js && node --check dist/primitive-renderer.js && node --check dist/primitive-editor.js && node --check dist/docs/app.js && node --check dist/docs/viewer.js && node --check server.mjs"
   }
 }

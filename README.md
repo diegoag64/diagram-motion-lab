@@ -14,73 +14,18 @@ npm run dev
 
 Open http://127.0.0.1:4178. `npm test` checks graph editing and layout contracts; `npm run check` checks JavaScript syntax.
 
-## Jev devtools prototype
+## Jev DevTools
 
-A reusable React package and local playground in [`devtools/`](devtools/README.md) uses a focused, resizable Jev drawer to inspect Jev calls with our diagram styles. It includes sample Choice, Score, Noul, and Box requests, retries, errors, and cancellation. Requires Node 22.12+: `npm --prefix devtools ci`, then `npm run dev:devtools` (port 4182). The existing lab remains dependency-free. The package exposes one root `<JevDevtools enabled={import.meta.env.DEV} />` component plus `createJevDevtools()` for server-side recording and SSE delivery. It is installable from `npm pack` (not published to npm); see the package README for the integration and independent React example.
+The reusable React inspector and its sample playground now live in [diegoag64/jev-devtools](https://github.com/diegoag64/jev-devtools). That repo owns the drawer, animated request diagrams, Node recorder, server adapter, installation guide, and sample/live scenarios.
 
-### Install devtools in another React package
+```sh
+git clone https://github.com/diegoag64/jev-devtools.git
+cd jev-devtools
+npm ci
+npm run dev
+```
 
-Requires **Node 22.12+**, **React 18 or 19**, and a Node server for your Jev calls. The package is not published to npm yet; install the archive built from this repository.
-
-1. Build the package from a checkout of this repository:
-
-   ```sh
-   git clone https://github.com/diegoag64/diagram-motion-lab.git
-   cd diagram-motion-lab/devtools
-   npm ci
-   npm pack
-   ```
-
-   This creates `diagram-motion-lab-jev-devtools-0.1.0.tgz` in `devtools/`. If you already have a checkout, start with `cd devtools` from its root.
-
-2. From the directory containing your new React package's `package.json`, install that archive (replace the path with its actual location):
-
-   ```sh
-   npm install /absolute/path/to/diagram-motion-lab/devtools/diagram-motion-lab-jev-devtools-0.1.0.tgz
-   ```
-
-   Keep the archive at a stable location accessible to teammates and CI, or vendor it into your project and install using a relative path. In a workspace with separate frontend and server packages, install it in both packages that import it.
-
-3. Add the stylesheet and mount the component once alongside your app at the React root:
-
-   ```tsx
-   import { JevDevtools } from '@diagram-motion-lab/jev-devtools';
-   import '@diagram-motion-lab/jev-devtools/styles.css';
-
-   export function Root() {
-     return <>
-       <App />
-       <JevDevtools enabled={import.meta.env.DEV} />
-     </>;
-   }
-   ```
-
-   `App` is your existing application component. This example uses Vite's development flag. For Next.js, mount in a client component and use `enabled={process.env.NODE_ENV === 'development'}`. The inspector defaults to disabled; no provider or manual subscription is needed.
-
-4. On your Node server, create one shared adapter and use its client for your Jev calls:
-
-   ```ts
-   import { createJevDevtools } from '@diagram-motion-lab/jev-devtools/server';
-
-   export const inspector = createJevDevtools({
-     enabled: process.env.NODE_ENV === 'development',
-     origin: 'http://localhost:3000', // replace with your exact browser origin
-   });
-   export const jev = inspector.createClient({
-     apiKey: process.env.TYPESAFE_API_KEY,
-   });
-
-   // In your existing Express/Connect server setup, before fallback routes:
-   app.use(inspector.middleware);
-   // Existing inference handlers now call jev.systemOne(...) normally.
-   // On server shutdown: inspector.dispose();
-   ```
-
-   Set `TYPESAFE_API_KEY` only in your server environment. Both the inference handlers and inspector middleware must use this same adapter instance. Keep its default `/api/jev-devtools` endpoint, or set the same custom `endpoint` on both the server adapter and React component. If frontend and backend use separate ports, proxy the inspector endpoint and inference routes through the frontend origin. History is in memory and shared across local tabs by default.
-
-Start your app in development mode and run a Jev request through the instrumented client. It will appear in the drawer with its context, questions, typed results, and transport details. To try this without an API key, run the [standalone sample consumer](devtools/examples/react-vite/) using the commands in the [full setup guide](devtools/README.md#local-playground-and-independent-example).
-
-See the [server integration guide](devtools/README.md#server-setup) for Next.js route handlers, same-origin proxy requirements, and process/runtime limits, and [history and access](devtools/README.md#history-and-access) for authorization and per-user scopes.
+Requires Node 22.12+; the DevTools playground runs on http://127.0.0.1:4182/. See its [integration guide](https://github.com/diegoag64/jev-devtools/blob/main/docs/integration.md) for installing the packed library in another React app. It remains a prototype, not a published npm release. The static diagram lab and unlisted `/docs/` replica remain here, with no dependency installation required.
 
 ## Playground
 
@@ -126,7 +71,7 @@ The canvas is capped at 40 nodes to keep it useful for explaining concepts. Auto
 
 Palette, type hierarchy, fine strokes, restrained emphasis, and small radii are adapted from [Cathryn Lavery's Diagram Design](https://github.com/cathrynlavery/diagram-design), inspected at commit `f2f4d49ea8d632f17cf196ba26599277a93f767b`. This playground warms the background slightly and increases interface typography for interaction. The graph renderer and motion system are new implementation, rather than the upstream skill's canonical controller.
 
-The upstream MIT notice is retained in `dist/THIRD_PARTY_NOTICES.txt`. Fonts load from Google Fonts and fall back to installed system fonts when offline. No upstream icon bundle is included. The static diagram playground has no backend, telemetry, or API integration; the optional Jev devtools package has its own server adapter described above.
+The upstream MIT notice is retained in `dist/THIRD_PARTY_NOTICES.txt`. Fonts load from Google Fonts and fall back to installed system fonts when offline. No upstream icon bundle is included. The static diagram playground has no backend, telemetry, or API integration; Jev DevTools has its own server adapter in the separate repository linked above.
 
 ## Unlisted docs preview
 
