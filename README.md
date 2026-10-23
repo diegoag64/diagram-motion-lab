@@ -2,6 +2,10 @@
 
 A local-first playground for editorial diagrams, flowing connections, and growing branches. Built with native ES modules, SVG, and CSS; no dependency installation or build step.
 
+## Workflow
+
+We work in **feature branches and pull requests by default**, unless explicitly requested otherwise. No direct pushes to `main`; review locally before merging and publishing. See [CONTRIBUTING.md](CONTRIBUTING.md) and [AGENTS.md](AGENTS.md).
+
 ## Run
 
 ```sh
@@ -12,7 +16,8 @@ Open http://127.0.0.1:4178. `npm test` checks graph editing and layout contracts
 
 ## Playground
 
-- Seven starting diagrams: branching ideas, pipeline, parallel fan-out, feedback loop, architecture, a blank starting point, and the Jev request/response composition (`?preset=jev`).
+- Eleven starting diagrams: four interactive Jev examples (Choice, Score, Noul, and Box), plus branching ideas, pipeline, parallel fan-out, feedback loop, architecture, a blank starting point, and the Jev request/response composition (`?preset=jev`).
+- Use **Build a flow** to add evidence, instructions, distributions, Noul probabilities, image regions, and code actions. Edit answer values and thresholds to highlight the active code paths. See [Jev visual primitives](docs/jev-primitives.md) for examples, semantics, and the reusable schema.
 - Select a node to rename it, edit its detail, or spawn one to three branches. Branches can themselves spawn more branches.
 - Signal, stream, and trace connection effects; independent flow speed and playback speed.
 - Six card styles above the canvas: Baseline (open surfaces and rounded outlines), plus Slate (the original filled cards), Soft, Neon, Offset, and Terminal. Styles apply to every preset, work in light/dark mode, persist locally, and carry through static SVG export.
@@ -21,11 +26,15 @@ Open http://127.0.0.1:4178. `npm test` checks graph editing and layout contracts
 - SVG export produces a complete static diagram, including nodes hidden by the current timeline position, with portable system fonts and the current palette. It does not export animation.
 - Reduced-motion preferences show complete diagrams without travel effects. Native controls and SVG nodes are keyboard accessible.
 
+![Choice classification example](docs/images/jev-choice.png)
+
 ## Structure
 
 - `dist/model.js`: graph schema, presets, immutable editing operations, tree layout, and connector geometry. Nodes own a primary parent for layout; cross-links represent fan-in and feedback.
 - `dist/renderer.js`: SVG scene, interpolated layout transitions, connection effects, pan/zoom, and static export.
 - `dist/app.js`: controls, timeline clock, undo, persistence, and accessibility behavior.
+- `dist/jev-primitives.js`: typed block data, probability math, conditional routes, and four Jev example graphs.
+- `dist/primitive-renderer.js` / `dist/primitive-editor.js`: SVG cards and their editing controls.
 - `dist/style.css`: extracted/adapted visual tokens and responsive application layout.
 
 To add a concept, add a preset to `PRESETS`. To add a motion treatment, extend the renderer's connection modes. Node `born` times currently drive the reveal sequence; a future scene/event track can add collapse, reparent, and narrative states without replacing the graph model.

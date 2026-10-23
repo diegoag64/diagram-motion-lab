@@ -1,3 +1,4 @@
+import {renderPrimitive} from './primitive-renderer.js';
 import {layout,connectionGeometry,bezierPoint,nodeSize,groupBox,sceneBounds} from './model.js';
 const NS='http://www.w3.org/2000/svg';
 const clamp=(v,a=0,b=1)=>Math.max(a,Math.min(b,v));
@@ -36,7 +37,7 @@ export class Renderer {
       this.groupLayer.append(g);this.groups.set(group.id,g);
     }
     for(const e of graph.edges) {
-      const g=element('g',{'aria-hidden':'true','data-edge':e.id});
+      const g=element('g',{'aria-hidden':'true','data-edge':e.id,class:e.active===false?'route-inactive':e.active===true?'route-selected':''});
       const base=element('path',{class:'edge-base',pathLength:100});
       const flow=element('path',{class:'edge-flow',pathLength:100});
       const particle=element('circle',{class:'flow-particle',r:3});
@@ -61,6 +62,7 @@ export class Renderer {
   select(id) {this.selected=id;for(const [key,node] of this.nodes){node.classList.toggle('selected',key===id);if(!node.classList.contains('junction'))node.setAttribute('aria-pressed',String(key===id));}}
   updateLabel(node) {
     const g=this.nodes.get(node.id);if(!g||node.kind==='junction')return;
+    if(node.visual){renderPrimitive(g,node,this.graph.nodes.find(n=>n.id===node.visual.imageFrom)?.visual?.image);return;}
     const {width,height}=nodeSize(node),lines=node.subtitle.split('\n'),multiline=height>76;
     g.classList.toggle('multiline',multiline);
     const title=g.querySelector('.node-name'),detail=g.querySelector('.node-subtitle');
@@ -96,7 +98,7 @@ export class Renderer {
     for(const e of this.graph.edges){
       const geo=connectionGeometry(this.graph,this.positions,e,this.vertical),dom=this.edges.get(e.id),birth=Math.max(nodeMap.get(e.to).born,nodeMap.get(e.from).born),reveal=this.reduced?1:clamp((time-birth+.4)/.55);
       dom.base.setAttribute('d',geo.d);dom.base.setAttribute('stroke-dasharray',`${reveal*100} 100`);dom.base.setAttribute('marker-end',reveal>=1&&e.arrow!==false?'url(#arrow)':'');dom.flow.setAttribute('d',geo.d);if(dom.label)dom.label.setAttribute('opacity',reveal);
-      const active=flowEnabled&&!this.reduced&&reveal>=1;dom.flow.style.display=active&&mode!=='signal'?'':'none';dom.particle.style.display=active&&mode==='signal'?'':'none';
+      const active=flowEnabled&&!this.reduced&&reveal>=1&&e.active!==false;dom.flow.style.display=active&&mode!=='signal'?'':'none';dom.particle.style.display=active&&mode==='signal'?'':'none';
       // All connections leaving the same node share a phase.
       const sourcePhase=nodeMap.get(e.from).born,phase=(flowTime*.22-sourcePhase*.17)%1,t=(phase+1)%1;
       if(mode==='signal'){const p=bezierPoint(geo.points,t);dom.particle.setAttribute('cx',p.x);dom.particle.setAttribute('cy',p.y);dom.particle.setAttribute('opacity',Math.min(t*8,(1-t)*8,1));}
@@ -111,12 +113,13 @@ export class Renderer {
     copy.querySelector('desc').textContent=`${title}. ${(this.graph.groups||[]).map(g=>g.label).join('. ')}. ${this.graph.nodes.filter(n=>n.kind!=='junction').map(n=>`${n.label}: ${n.subtitle.replaceAll('\n',', ')}`).join('. ')}.`;
     copy.querySelectorAll('.edge-flow,.flow-particle,.selection-ring').forEach(n=>n.remove());
     copy.querySelectorAll('[tabindex],[role=button],[aria-hidden]').forEach(n=>{n.removeAttribute('tabindex');n.removeAttribute('aria-pressed');n.removeAttribute('aria-hidden');if(n.getAttribute('role')==='button')n.removeAttribute('role');});
-    for(const n of this.graph.nodes)copy.querySelector(`[data-node="${n.id}"]`).setAttribute('aria-label',`${n.label}. ${n.subtitle.replaceAll('\n',' ')}`);
+    for(const n of this.graph.nodes)if(!n.visual)copy.querySelector(`[data-node="${n.id}"]`).setAttribute('aria-label',`${n.label}. ${n.subtitle.replaceAll('\n',' ')}`);
     // Inline resolved presentation so containers, labels, and fonts survive standalone export.
-    const properties=['fill','stroke','stroke-width','stroke-opacity','fill-opacity','stroke-dasharray','rx','ry','filter','font-family','font-size','font-weight','font-style','letter-spacing','text-anchor'];
-    const sourceElements=[...this.svg.querySelectorAll('rect,path,text,tspan,circle')].filter(n=>!n.closest('.edge-flow,.flow-particle,.selection-ring'));
-    const targetElements=[...copy.querySelectorAll('rect,path,text,tspan,circle')];
+    const properties=['opacity','fill','stroke','stroke-width','stroke-opacity','fill-opacity','stroke-dasharray','rx','ry','filter','font-family','font-size','font-weight','font-style','letter-spacing','text-anchor'];
+    const sourceElements=[...this.svg.querySelectorAll('rect,path,text,tspan,circle,ellipse')].filter(n=>!n.closest('.edge-flow,.flow-particle,.selection-ring'));
+    const targetElements=[...copy.querySelectorAll('rect,path,text,tspan,circle,ellipse')];
     sourceElements.forEach((source,i)=>{const target=targetElements[i],style=getComputedStyle(source);for(const property of properties)target.style.setProperty(property,style.getPropertyValue(property));if(source.matches('text,tspan')){target.style.fontFamily=source.closest('.group-title')?'Georgia, serif':style.fontFamily.includes('Mono')||style.fontFamily.includes('monospace')?'monospace':'system-ui, sans-serif';if(!source.children.length&&source.textContent){target.setAttribute('textLength',source.getComputedTextLength());target.setAttribute('lengthAdjust','spacingAndGlyphs');}}});
+    const targetGroups=[...copy.querySelectorAll('g')];[...this.svg.querySelectorAll('g')].forEach((source,i)=>{if(targetGroups[i])targetGroups[i].style.opacity=getComputedStyle(source).opacity;});
     copy.querySelectorAll('.edge-base').forEach(p=>p.removeAttribute('stroke-dasharray'));
     const box=sceneBounds(this.graph,this.targets,this.vertical);copy.setAttribute('viewBox',`${box.x} ${box.y} ${box.width} ${box.height}`);copy.setAttribute('width',box.width);copy.setAttribute('height',box.height);copy.setAttribute('aria-label',title);
     copy.insertBefore(element('rect',{...box,fill:getComputedStyle(document.documentElement).getPropertyValue('--canvas').trim()}),copy.querySelector('#group-layer'));

@@ -17,6 +17,7 @@
     <aside id="library" class="library" aria-label="Diagram presets">
       <div class="section-label">Diagrams <span id="collection-count">7</span></div>
       <nav id="presets" aria-label="Choose a diagram"></nav>
+      <section class="block-library"><div class="section-label">Build a flow</div><p class="help">Add a connected block from the selected node.</p><div id="block-palette" aria-label="Add a connected block"></div></section>
       <section class="card-studio" aria-label="Card styles">
         <div class="section-label">Card style</div>
         <div id="card-themes" role="group" aria-label="Choose a card style"></div>
@@ -33,6 +34,7 @@
     </aside>
     <div class="work-sheet"><main class="main">
       <section class="intro"><div><span id="preset-number" hidden></span><h1 id="diagram-title">Branching ideas</h1><p id="diagram-caption">One thought. Many possibilities.</p></div></section>
+      <div id="jev-guide" class="jev-guide" hidden><span>Illustrative answers · no live model calls</span><a id="jev-docs" target="_blank" rel="noreferrer">Primitive guide ↗</a></div>
       <section class="canvas-shell" aria-label="Interactive diagram canvas">
         <div class="canvas-top"><span class="canvas-tag"><span class="status-dot"></span> <span id="canvas-state">Playing</span></span><span id="node-count" class="mono">7 nodes · 6 connections</span><button id="reset" class="text-button" title="Reset this diagram">Reset diagram ↺</button></div>
         <div id="canvas" class="canvas no-dots"><svg id="diagram" xmlns="http://www.w3.org/2000/svg" aria-label="Interactive branching diagram"><title>Branching ideas</title><desc>Select a node to edit its label or grow branches. Drag empty space to pan.</desc><defs><marker id="arrow" viewBox="0 0 8 8" markerWidth="6" markerHeight="6" refX="7" refY="4" orient="auto-start-reverse"><path d="M1 1L7 4L1 7" fill="none" stroke="var(--muted)" stroke-width="1.2"/></marker></defs><g id="edge-layer"></g><g id="node-layer"></g></svg></div>
@@ -55,6 +57,8 @@
         <div class="edit-actions"><button id="undo" class="text-button" disabled>↶ Undo</button><button id="remove" class="text-button" disabled>Remove branch</button></div>
       </section>
 
+      <section id="primitive-editor" class="primitive-editor" hidden></section>
+      <section class="connection-editor"><h3>Connect the flow</h3><div class="connection-fields"><label>Connect selected node to<select id="connect-target"></select></label><label>Connection label<input id="connect-label" type="text" maxlength="40" placeholder="Optional label"></label><button id="connect" class="button">Connect nodes</button><button id="add-routes" class="button">Add code routes</button></div><p class="help">Add code routes to a Choice, Score, or Noul answer. Active paths follow its values and your thresholds.</p></section>
     </aside></div>
   </div>
   <footer class="app-footer"><span>Changes saved in this browser</span><span>Space to play or pause</span><a href="./THIRD_PARTY_NOTICES.txt" target="_blank">Credits & licenses ↗</a></footer>
