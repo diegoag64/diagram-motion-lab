@@ -8,9 +8,9 @@
 .diagram-actions{display:flex;gap:6px;align-items:center}.diagram-actions select{font-size:11px;background:var(--bg);border:1px solid var(--border);padding:5px;border-radius:4px;max-width:95px}.diagram-actions button{border:1px solid var(--border);border-radius:4px;width:28px;height:28px;padding:0;font-size:16px}.diagram-actions button:disabled{opacity:.4;cursor:default}
 .diagram-stage{height:auto;aspect-ratio:1245/270;margin:12px 0;background:var(--canvas)}#diagram{width:100%;height:100%;display:block;overflow:visible}.diagram-node{pointer-events:none!important}.selection-ring{display:none}.junction-dot{fill:var(--accent)}
 .original-stage{padding:12px 0}.original-stage img{display:block;width:100%;height:auto}.original-stage[hidden],.diagram-stage[hidden]{display:none}
-#diagram-figure figcaption{display:flex;justify-content:space-between;gap:12px;color:var(--text);font:10px/1.5 Inter,sans-serif;margin-top:10px}.motion-status{white-space:nowrap;color:var(--pink)}
+
 #diagram-dialog .diagram-stage{height:min(65vh,600px);aspect-ratio:auto}#diagram-dialog .original-stage{max-height:65vh;overflow:auto}#diagram-dialog .original-stage img{min-width:600px}
-@media(max-width:470px){.diagram-stage{height:820px;aspect-ratio:auto}#diagram-dialog .diagram-stage{height:72vh}#diagram-figure figcaption{font-size:9px}.diagram-toolbar{gap:6px}.segmented button{padding:5px 7px}}
+@media(max-width:470px){.diagram-stage{height:820px;aspect-ratio:auto}#diagram-dialog .diagram-stage{height:72vh}.diagram-toolbar{gap:6px}.segmented button{padding:5px 7px}}
 
 /* Fullscreen canvas: the same live diagram, with a separate navigable viewport. */
 body.diagram-expanded{overflow:hidden}
@@ -31,8 +31,7 @@ body.diagram-expanded{overflow:hidden}
 #diagram-dialog .segmented{border:0;padding:0}
 #diagram-dialog .diagram-actions{padding-right:2px}
 #diagram-dialog #expand{display:none}
-#diagram-dialog figcaption{position:absolute;left:20px;bottom:26px;margin:0;pointer-events:none}
-#diagram-dialog #diagram-caption{display:none}
+
 .viewer-controls{position:absolute;z-index:3;top:16px;left:16px;display:flex;align-items:center;gap:4px}
 .viewer-controls button,#close-diagram{display:grid;place-items:center;width:34px;height:34px;padding:7px;border:1px solid var(--border);border-radius:5px;background:var(--bg);color:var(--heading)}
 .viewer-controls button:hover,#close-diagram:hover{background:var(--hover)}
@@ -42,5 +41,5 @@ body.diagram-expanded{overflow:hidden}
 #close-diagram{position:absolute;z-index:3;top:16px;right:16px}
 .viewer-hint{position:absolute;z-index:2;top:22px;left:50%;transform:translateX(-50%);margin:0;color:var(--text);opacity:.65;font:11px/20px Inter,sans-serif;pointer-events:none;white-space:nowrap}
 .viewer-hint span{padding:0 6px}
-@media(max-width:700px){#diagram-dialog{inset:8px;width:calc(100vw - 16px);height:calc(100dvh - 16px);border-radius:12px}.viewer-hint{top:auto;bottom:76px;font-size:10px}.viewer-hint span{padding:0 3px}#diagram-dialog .diagram-toolbar{bottom:18px;gap:8px}#diagram-dialog figcaption{display:none}.viewer-controls{top:12px;left:12px}#close-diagram{top:12px;right:12px}}
+@media(max-width:700px){#diagram-dialog{inset:8px;width:calc(100vw - 16px);height:calc(100dvh - 16px);border-radius:12px}.viewer-hint{top:auto;bottom:76px;font-size:10px}.viewer-hint span{padding:0 3px}#diagram-dialog .diagram-toolbar{bottom:18px;gap:8px}.viewer-controls{top:12px;left:12px}#close-diagram{top:12px;right:12px}}
 @media(prefers-reduced-motion:reduce){#diagram-dialog #diagram-content{will-change:auto}}

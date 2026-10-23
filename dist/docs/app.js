@@ -18,8 +18,6 @@ let noticeTimer;function announce(text){$('announcement').textContent=text;clear
 function sync(){
  $('theme').setAttribute('aria-label',`Switch to ${document.documentElement.dataset.theme==='dark'?'light':'dark'} theme`);
  $('motion').textContent=playing?'Ⅱ':'▶';$('motion').setAttribute('aria-label',playing?'Pause diagram animation':'Play diagram animation');$('motion').disabled=reduced.matches||view==='original';$('card-style').disabled=view==='original';
- $('motion-status').textContent=view==='original'?'Mermaid reference':reduced.matches?'Static · reduced motion':playing?'● Flowing':'Ⅱ Paused';
- $('diagram-caption').textContent=view==='original'?'Original diagram from the TypeSafe introduction.':'One request. Parallel questions. Typed answers.';
  document.querySelectorAll('[data-view]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.view===view)));
 }
 $('theme').addEventListener('click',()=>{document.documentElement.dataset.theme=document.documentElement.dataset.theme==='dark'?'light':'dark';sync();persist();});
