@@ -113,9 +113,11 @@ The recorder preserves the original SDK APIPromise, including response helpers a
 npm run dev:devtools
 ```
 
-Open **http://127.0.0.1:4182/**. The original lab and unlisted `/docs/` remain on 4178. The playground now uses the same public component and adapter described above.
+Open **http://127.0.0.1:4182/**. The original lab and unlisted `/docs/` remain on 4178. The playground uses the same public component and adapter described above. Its drawer starts closed so the application result remains visible; open **Jev DevTools** in the bottom-right corner to inspect the request.
 
-Samples cover triage (Choice, Score, Noul), image regions (Box + Noul), retry after 429, failure, and cancellation. Sample answers and usage are fixed fixtures, even if the context changes. They use the real SDK's serialization/retry paths with a custom fetch and make no inference calls.
+Samples cover triage (Choice, Score, Noul), image regions (Box + Noul), retry after 429, failure, and cancellation. Choose a sample outcome (blocked payment, delayed delivery, or quick question) to compare different fixture responses. Sample answers and usage are fixed by that selection, even if the context changes. They use the real SDK's serialization/retry paths with a custom fetch and make no inference calls.
+
+Successful runs also update an application preview: Choice selects a support queue, Score sets a priority, and Noul suggests a human handoff. **Why this outcome?** explains the signals. Image runs show the returned Box with a toggleable overlay, gated by the separate Noul presence answer. Retry, failure, and cancellation have explicit states; a failed run never applies an earlier result. Priority and presence thresholds are labeled demo policies, and no actual ticket is sent.
 
 For optional live mode, copy `.env.example` to `.env.local`, set `TYPESAFE_API_KEY` there, and restart. No key is accepted in the browser. The image example uses the SDK's experimental image contract. Live behavior has not been verified.
 
@@ -129,7 +131,7 @@ npm run dev
 
 Open **http://127.0.0.1:4183/**. This example imports only the installed package's public exports, includes a sample-only server, and uses its own light theme to demonstrate CSS isolation.
 
-Resize the drawer by dragging the top edge or using the focused handle's arrow keys, Shift+arrows, Home, and End. Expand/Restore adjusts its size. Close or Escape returns focus to the Jev launcher; closing retains the selected request, filters, and subscription. Unmounting/disabling the component closes the subscription; server capture continues independently.
+Resize the drawer by dragging the top edge or using the focused handle's arrow keys, Shift+arrows, Home, and End. Expand/Restore adjusts its size. Close or Escape returns focus to the TypeSafe-branded Jev DevTools launcher; closing retains the selected request, filters, and subscription. Unmounting/disabling the component closes the subscription; server capture continues independently.
 
 ![Jev Inspector](../docs/images/jev-devtools.png)
 

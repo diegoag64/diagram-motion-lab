@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { JevDevtools } from "./index";
+import { ScenarioResult, type RunState } from "./ScenarioResult";
+import { sampleProfiles, type SampleProfile } from "./sample-profiles";
 import "./inspector.css";
 import "./style.css";
 
@@ -8,6 +10,14 @@ const savedSession = sessionStorage.getItem("jev-inspector-session");
 const session = savedSession || crypto.randomUUID();
 sessionStorage.setItem("jev-inspector-session", session);
 const endpoint = (path: string) => `/__jev/${path}?session=${session}`;
+class RunError extends Error {
+  constructor(
+    message: string,
+    public cancelled = false,
+  ) {
+    super(message);
+  }
+}
 async function post(path: string, body: unknown = {}) {
   const response = await fetch(endpoint(path), {
     method: "POST",
@@ -15,10 +25,23 @@ async function post(path: string, body: unknown = {}) {
     body: JSON.stringify(body),
   });
   const data = await response.json();
-  if (!response.ok) throw new Error(data.error || "Request failed");
+  if (!response.ok)
+    throw new RunError(data.error || "Request failed", data.cancelled === true);
   return data;
 }
 function App() {
+  const [profile, setProfile] = useState<SampleProfile>("billing");
+  const [outcome, setOutcome] = useState<RunState>({
+    id: "initial",
+    status: "idle",
+    scenario: "triage",
+    mode: "sample",
+    message: "",
+  });
+  const resetOutcome = () => {
+    setOutcome({ id: "idle", status: "idle", scenario, mode, message });
+    setFeedback("Ready to capture a request.");
+  };
   const [scenario, setScenario] = useState("triage"),
     [mode, setMode] = useState("sample"),
     [live, setLive] = useState(false);
@@ -35,12 +58,32 @@ function App() {
   }, []);
   async function run() {
     const id = crypto.randomUUID();
+    const started = performance.now();
+    const captured = { id, scenario, mode, message };
+    setOutcome({ ...captured, status: "pending" });
     setRunId(id);
     setFeedback("Request running…");
     try {
-      await post("run", { runId: id, scenario, mode, message });
-      setFeedback("Response captured. Open a request in the inspector.");
+      const data = await post("run", {
+        runId: id,
+        scenario,
+        mode,
+        message,
+        profile,
+      });
+      setOutcome({
+        ...captured,
+        status: "success",
+        result: data.result,
+        elapsedMs: Math.round(performance.now() - started),
+      });
+      setFeedback("Response ready. Explore the result below.");
     } catch (e) {
+      setOutcome({
+        ...captured,
+        status: e instanceof RunError && e.cancelled ? "cancelled" : "error",
+        error: e instanceof Error ? e.message : "Request failed",
+      });
       setFeedback(
         `${e instanceof Error ? e.message : "Request failed"}. See the inspector for details.`,
       );
@@ -78,6 +121,7 @@ function App() {
                   disabled={!!runId}
                   onChange={(e) => {
                     setScenario(e.target.value);
+                    resetOutcome();
                     if (["retry", "error"].includes(e.target.value))
                       setMode("sample");
                   }}
@@ -95,7 +139,10 @@ function App() {
                 <select
                   value={mode}
                   disabled={!!runId}
-                  onChange={(e) => setMode(e.target.value)}
+                  onChange={(e) => {
+                    setMode(e.target.value);
+                    resetOutcome();
+                  }}
                 >
                   <option value="sample">Sample</option>
                   <option
@@ -107,6 +154,27 @@ function App() {
                 </select>
               </label>
             </div>
+            {mode === "sample" && scenario !== "image" && (
+              <label className="fixture-picker">
+                Sample outcome
+                <select
+                  value={profile}
+                  disabled={!!runId}
+                  onChange={(e) => {
+                    const key = e.target.value as SampleProfile;
+                    setProfile(key);
+                    setMessage(sampleProfiles[key].message);
+                    resetOutcome();
+                  }}
+                >
+                  {Object.entries(sampleProfiles).map(([key, fixture]) => (
+                    <option key={key} value={key}>
+                      {fixture.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
             {scenario === "image" ? (
               <div className="image-input">
                 <img
@@ -119,9 +187,13 @@ function App() {
               <label>
                 Context
                 <textarea
+                  disabled={!!runId}
                   maxLength={8000}
                   value={message}
-                  onChange={(e) => setMessage(e.target.value)}
+                  onChange={(e) => {
+                    setMessage(e.target.value);
+                    resetOutcome();
+                  }}
                 />
               </label>
             )}
@@ -157,8 +229,13 @@ function App() {
             </p>
           </section>
         </div>
+        <ScenarioResult run={outcome} />
       </main>
-      <JevDevtools enabled={import.meta.env.DEV} endpoint="/api/jev-devtools" />
+      <JevDevtools
+        enabled={import.meta.env.DEV}
+        endpoint="/api/jev-devtools"
+        defaultOpen={false}
+      />
     </>
   );
 }
