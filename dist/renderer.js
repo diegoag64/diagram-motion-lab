@@ -77,15 +77,17 @@ export class Renderer {
   positionEdgeLabels(positions) {
     for(const e of this.graph.edges){const label=this.edges.get(e.id).label;if(!label)continue;const midpoint=bezierPoint(connectionGeometry(this.graph,positions,e,this.vertical).points,.5),w=label.querySelector('text').getComputedTextLength()+16;label.setAttribute('transform',`translate(${midpoint.x+(this.vertical?w/2+10:0)},${midpoint.y+(this.vertical?0:-16)})`);const mask=label.querySelector('rect');mask.setAttribute('x',-w/2);mask.setAttribute('y',-10);mask.setAttribute('width',w);mask.setAttribute('height',20);}
   }
+  // Read layout dimensions, unaffected by a fullscreen parent's CSS zoom transform.
+  dimensions() {const style=getComputedStyle(this.svg);return {width:parseFloat(style.width)||this.svg.clientWidth,height:parseFloat(style.height)||this.svg.clientHeight};}
   fit(readable=true) {
     if(!this.targets.size)return;
-    const box=sceneBounds(this.graph,this.targets,this.vertical),{width:w,height:h}=this.svg.getBoundingClientRect();
+    const box=sceneBounds(this.graph,this.targets,this.vertical),{width:w,height:h}=this.dimensions();
     let scale=Math.min(w/box.width,h/box.height,1.15);
     if(this.vertical&&readable&&scale<.9){scale=.9;const node=this.graph.nodes.find(n=>n.id===this.selected)||this.graph.nodes[0],p=this.targets.get(node.id);this.camera={x:this.graph.layoutMode==='authored'?box.x+box.width/2-w/scale/2:p.x+nodeSize(node).width/2-w/scale/2,y:Math.max(box.y,p.y-90),scale};}
     else this.camera={x:box.x+box.width/2-w/scale/2,y:box.y+box.height/2-h/scale/2,scale};this.applyCamera();
   }
-  zoom(factor) {const {width:w,height:h}=this.svg.getBoundingClientRect(),old=this.camera.scale,next=clamp(old*factor,.2,2.5);this.camera.x+=w/old/2-w/next/2;this.camera.y+=h/old/2-h/next/2;this.camera.scale=next;this.applyCamera();}
-  applyCamera() {const {x,y,scale}=this.camera,{width,height}=this.svg.getBoundingClientRect();this.svg.setAttribute('viewBox',`${x} ${y} ${width/scale} ${height/scale}`);this.onZoom(Math.round(scale*100));}
+  zoom(factor) {const {width:w,height:h}=this.dimensions(),old=this.camera.scale,next=clamp(old*factor,.2,2.5);this.camera.x+=w/old/2-w/next/2;this.camera.y+=h/old/2-h/next/2;this.camera.scale=next;this.applyCamera();}
+  applyCamera() {const {x,y,scale}=this.camera,{width,height}=this.dimensions();this.svg.setAttribute('viewBox',`${x} ${y} ${width/scale} ${height/scale}`);this.onZoom(Math.round(scale*100));}
   render(time,flowTime,mode,flowEnabled,now=performance.now()) {
     if(!this.graph)return;
     const progress=this.reduced?1:smooth((now-this.layoutStart)/700),nodeMap=new Map(this.graph.nodes.map(n=>[n.id,n]));

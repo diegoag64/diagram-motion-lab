@@ -1,5 +1,6 @@
 import {CARD_THEMES} from '../card-themes.js';
 import {Renderer} from '../renderer.js';
+import {DiagramViewer} from './viewer.js';
 import {createGraph,duration} from '../model.js';
 const $=id=>document.getElementById(id),reduced=matchMedia('(prefers-reduced-motion: reduce)');
 const prefsKey='typesafe-docs-local-preview-v1';
@@ -26,10 +27,10 @@ $('card-style').addEventListener('change',()=>{cardStyle=$('card-style').value;s
 $('motion').addEventListener('click',()=>{playing=!playing;sync();persist();});
 document.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>{view=b.dataset.view;$('animated-diagram').hidden=view!=='animated';$('original-diagram').hidden=view!=='original';if(view==='animated')requestAnimationFrame(()=>renderer.fit(false));sync();}));
 const dialog=$('diagram-dialog');
-$('expand').addEventListener('click',()=>{if(dialog.open){dialog.close();return;}dialog.showModal();$('expanded-mount').append($('diagram-figure'));$('expand').setAttribute('aria-label','Restore inline diagram');$('expand').title='Restore inline diagram';requestAnimationFrame(()=>renderer.fit(false));});
+const viewer=new DiagramViewer({viewport:$('diagram-viewport'),content:$('diagram-content'),readout:$('viewer-zoom'),zoomIn:$('viewer-zoom-in'),zoomOut:$('viewer-zoom-out'),reset:$('viewer-reset')});
+$('expand').addEventListener('click',()=>{if(dialog.open){dialog.close();return;}dialog.showModal();$('expanded-mount').append($('diagram-figure'));$('expand').setAttribute('aria-label','Restore inline diagram');$('expand').title='Restore inline diagram';document.body.classList.add('diagram-expanded');requestAnimationFrame(()=>{if(dialog.open){renderer.fit(false);viewer.open();}});});
 $('close-diagram').addEventListener('click',()=>dialog.close());
-dialog.addEventListener('close',()=>{$('diagram-mount').append($('diagram-figure'));$('expand').setAttribute('aria-label','Expand diagram');$('expand').title='Expand diagram';requestAnimationFrame(()=>{renderer.fit(false);$('expand').focus();});});
-dialog.addEventListener('click',e=>{if(e.target===dialog)dialog.close();});
+dialog.addEventListener('close',()=>{viewer.close();document.body.classList.remove('diagram-expanded');$('diagram-mount').append($('diagram-figure'));$('expand').setAttribute('aria-label','Expand diagram');$('expand').title='Expand diagram';requestAnimationFrame(()=>{renderer.fit(false);$('expand').focus();});});
 let last=performance.now();function tick(now){const delta=Math.min((now-last)/1000,.06);last=now;if(!document.hidden&&inView&&view==='animated'){if(playing&&!reduced.matches)flowTime+=delta;renderer.render(duration(graph),flowTime,'signal',!reduced.matches,now);}requestAnimationFrame(tick);}
 new IntersectionObserver(entries=>{inView=entries[0].isIntersecting;},{rootMargin:'100px'}).observe($('diagram-figure'));
 reduced.addEventListener('change',()=>{renderer.reduced=reduced.matches;sync();});
