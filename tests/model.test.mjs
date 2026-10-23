@@ -40,14 +40,15 @@ test('editing limits reject invalid growth without changing the graph',()=>{
 
 test('the two inputs converge at one junction and request/response attach to the container boundary',()=>{
   const g=createGraph('jev'),positions=layout(g),path=id=>connectionGeometry(g,positions,g.edges.find(e=>e.id===id)).points;
-  assert.deepEqual(path('data-request').at(-1),{x:220,y:140});
-  assert.deepEqual(path('questions-request').at(-1),{x:220,y:140});
-  assert.deepEqual(path('request-model')[0],{x:220,y:140});
-  assert.deepEqual(path('request-model').at(-1),{x:360,y:140});
-  assert.deepEqual(path('model-response')[0],{x:632,y:140});
+  // Boundary coordinates from the original Mermaid SVG in docs/assets.
+  assert.deepEqual(path('data-request').at(-1),{x:222.6394591331482,y:147});
+  assert.deepEqual(path('questions-request').at(-1),{x:222.6394591331482,y:147});
+  assert.deepEqual(path('request-model')[0],{x:222.6394591331482,y:147});
+  assert.deepEqual(path('request-model').at(-1),{x:354.8726682662964,y:147});
+  assert.deepEqual(path('model-response')[0],{x:659.7711057662964,y:147});
   const compact=layout(g,true),request=connectionGeometry(g,compact,g.edges.find(e=>e.id==='request-model'),true);
   assert.deepEqual(request.points[0],{x:188,y:180});
-  assert.deepEqual(request.points.at(-1),{x:188,y:232});
+  assert.deepEqual(request.points.at(-1),{x:188,y:242});
 });
 
 test('authored graphs remain finite after growth and removal cleans empty containers',()=>{

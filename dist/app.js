@@ -28,6 +28,22 @@ function validGraph(g) {
 if(validGraph(saved.graph)) {graph=saved.graph;selected=graph.nodes.some(n=>n.id===saved.selected)?saved.selected:graph.nodes[0].id;time=duration(graph);}
 const requestedPreset=new URLSearchParams(location.search).get('preset');
 if(PRESETS.some(p=>p.id===requestedPreset)&&graph.preset!==requestedPreset){graph=createGraph(requestedPreset);selected='n0';time=0;}
+// Refresh the bundled composition without discarding saved edits or grown branches.
+if(graph.preset==='jev'&&graph.referenceVersion!==2) {
+  const reference=createGraph('jev');
+  for(const node of graph.nodes) {
+    const updated=reference.nodes.find(n=>n.id===node.id);if(!updated)continue;
+    const originalLabel=updated.label[0].toUpperCase()+updated.label.slice(1);
+    const originalSubtitle=node.id==='n5'?'branch, sort,\nand route':updated.subtitle;
+    const customized=node.label!==originalLabel||node.subtitle!==originalSubtitle;
+    if(node.label===originalLabel)node.label=updated.label;
+    if(node.subtitle===originalSubtitle)node.subtitle=updated.subtitle;
+    Object.assign(node,{position:updated.position,compactPosition:updated.compactPosition});
+    if(updated.width!==undefined){node.width=customized?Math.max(node.width||0,updated.width):updated.width;node.height=customized?Math.max(node.height||0,updated.height):updated.height;}
+  }
+  for(const group of graph.groups||[])if(group.id==='model')Object.assign(group,{eyebrow:'',padding:reference.groups[0].padding,titleAlign:'center'});
+  Object.assign(graph,{referenceVersion:2,scenePadding:8,showNodeNumbers:false});
+}
 if(['signal','stream','draw'].includes(saved.mode))mode=saved.mode;
 if(typeof saved.flowEnabled==='boolean')flowEnabled=saved.flowEnabled;
 if(Number.isFinite(saved.flowSpeed)&&saved.flowSpeed>=.3&&saved.flowSpeed<=2.5)flowSpeed=saved.flowSpeed;

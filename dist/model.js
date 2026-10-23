@@ -14,16 +14,16 @@ export const PRESETS = [
 export function createGraph(id) {
   const p = PRESETS.find(p => p.id === id) || PRESETS[0];
   if(p.id==='jev') return {
-    preset:'jev',layoutMode:'authored',nextId:6,
+    preset:'jev',layoutMode:'authored',nextId:6,referenceVersion:2,scenePadding:8,showNodeNumbers:false,
     nodes:[
-      {id:'n0',label:'Your data',subtitle:'(the state)\ntext or JSON',parent:null,born:0,width:164,height:112,position:{x:0,y:0},compactPosition:{x:0,y:0}},
-      {id:'n1',label:'Your questions',subtitle:'about the data\n(several types)',parent:null,born:0,width:164,height:112,position:{x:0,y:168},compactPosition:{x:212,y:0}},
-      {id:'n2',kind:'junction',label:'Combined request',subtitle:'',parent:'n0',born:.6,position:{x:220,y:140},compactPosition:{x:188,y:180}},
-      {id:'n3',label:'Evaluate each question',subtitle:'against the state\nin parallel',parent:'n2',born:1.2,width:224,height:112,position:{x:384,y:104},compactPosition:{x:76,y:296}},
-      {id:'n4',label:'Typed answers',subtitle:'+ probabilities\n+ confidence\n(some types)',parent:'n3',born:2.1,width:180,height:144,position:{x:776,y:68},compactPosition:{x:98,y:540}},
-      {id:'n5',label:'Your code',subtitle:'branch, sort,\nand route',parent:'n4',born:3,width:184,height:112,position:{x:1040,y:84},compactPosition:{x:96,y:780}},
+      {id:'n0',label:'your data',subtitle:'(the state)\ntext or JSON',parent:null,born:0,width:156.6328125,height:102,position:{x:16,y:20},compactPosition:{x:0,y:0}},
+      {id:'n1',label:'your questions',subtitle:'about the data\n(several types)',parent:null,born:0,width:172.6328125,height:102,position:{x:8,y:172},compactPosition:{x:212,y:0}},
+      {id:'n2',kind:'junction',label:'Combined request',subtitle:'',parent:'n0',born:.6,position:{x:222.6394591331482,y:147},compactPosition:{x:188,y:180}},
+      {id:'n3',label:'evaluate each question',subtitle:'against the state\nin parallel',parent:'n2',born:1.2,width:234.8984375,height:102,position:{x:389.8726682662964,y:108},compactPosition:{x:70.55078125,y:296}},
+      {id:'n4',label:'typed answers',subtitle:'+ probabilities\n+ confidence\n(some types)',parent:'n3',born:2.1,width:171.4453125,height:126,position:{x:797.7945432662964,y:84},compactPosition:{x:102.27734375,y:540}},
+      {id:'n5',label:'your code',subtitle:'branch, sort, and route',parent:'n4',born:3,width:232.578125,height:78,position:{x:1004.2398557662964,y:108},compactPosition:{x:71.7109375,y:780}},
     ],
-    groups:[{id:'model',label:'TypeSafe AI model: Jev',eyebrow:'MODEL',members:['n3'],focal:true}],
+    groups:[{id:'model',label:'TypeSafe AI model: Jev',eyebrow:'',members:['n3'],focal:true,padding:{left:35,right:35,top:54,bottom:30},titleAlign:'center'}],
     edges:[
       {id:'data-request',from:'n0',to:'n2',arrow:false},
       {id:'questions-request',from:'n1',to:'n2',arrow:false},
@@ -94,8 +94,9 @@ export function nodeSize(node) { return node.kind==='junction'?{width:0,height:0
 export function nodeBox(node,positions) { return {...positions.get(node.id),...nodeSize(node)}; }
 export function groupBox(group,graph,positions) {
   const boxes=group.members.map(id=>graph.nodes.find(n=>n.id===id)).filter(Boolean).map(n=>nodeBox(n,positions));
-  const x=Math.min(...boxes.map(b=>b.x))-24,y=Math.min(...boxes.map(b=>b.y))-64;
-  return {x,y,width:Math.max(...boxes.map(b=>b.x+b.width))-x+24,height:Math.max(...boxes.map(b=>b.y+b.height))-y+24};
+  const padding=group.padding||{left:24,right:24,top:64,bottom:24};
+  const x=Math.min(...boxes.map(b=>b.x))-padding.left,y=Math.min(...boxes.map(b=>b.y))-padding.top;
+  return {x,y,width:Math.max(...boxes.map(b=>b.x+b.width))-x+padding.right,height:Math.max(...boxes.map(b=>b.y+b.height))-y+padding.bottom};
 }
 export function connectionGeometry(graph,positions,edge,vertical=false) {
   const endpoint=(id,groupId)=>groupId?groupBox(graph.groups.find(g=>g.id===groupId),graph,positions):nodeBox(graph.nodes.find(n=>n.id===id),positions);
@@ -103,8 +104,8 @@ export function connectionGeometry(graph,positions,edge,vertical=false) {
 }
 export function sceneBounds(graph,positions,vertical=false) {
   const boxes=graph.nodes.map(n=>nodeBox(n,positions)).concat((graph.groups||[]).map(g=>groupBox(g,graph,positions)));
-  const feedback=graph.edges.some(e=>e.feedback),x=Math.min(...boxes.map(b=>b.x))-32,y=Math.min(...boxes.map(b=>b.y))-32;
-  return {x,y,width:Math.max(...boxes.map(b=>b.x+b.width))-x+(feedback&&vertical?120:32),height:Math.max(...boxes.map(b=>b.y+b.height))-y+(feedback&&!vertical?120:32)};
+  const padding=graph.scenePadding??32,feedback=graph.edges.some(e=>e.feedback),x=Math.min(...boxes.map(b=>b.x))-padding,y=Math.min(...boxes.map(b=>b.y))-padding;
+  return {x,y,width:Math.max(...boxes.map(b=>b.x+b.width))-x+(feedback&&vertical?120:padding),height:Math.max(...boxes.map(b=>b.y+b.height))-y+(feedback&&!vertical?120:padding)};
 }
 
 export function edgeGeometry(a,b,feedback=false,vertical=false) {

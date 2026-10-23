@@ -37,12 +37,12 @@ svg[data-card-theme]:not([data-card-theme=slate]) .diagram-node:hover .node-box 
 svg[data-card-theme=offset] .node-name { font-weight:600; }
 svg[data-card-theme=terminal] .node-name,svg[data-card-theme=terminal] .node-subtitle { font-family:var(--mono); }
 svg[data-card-theme=terminal] .node-index,svg[data-card-theme=neon] .node-index { fill:var(--accent); }
-/* Match the reference's reading size after the Jev composition is fit inline.
-   The reference uses 16px type over 1245 units; ours spans 1288 units. */
-svg[data-preset=jev] .multiline .node-name { font-size:17px; }
-svg[data-preset=jev] .multiline .node-subtitle { font-size:17px; }
-svg[data-preset=jev] .edge-label text { font:400 17px var(--sans); }
-svg[data-preset=jev] .group-title { font-size:24px; }
-/* Monospace titles need slightly less size to retain the complete question label. */
+/* Jev uses the reference's 16px text and card geometry at the same fit scale. */
+svg[data-preset=jev] .multiline .node-name { font-size:16px; font-weight:400; }
+svg[data-preset=jev] .multiline .node-subtitle { font-size:16px; fill:var(--ink); }
+svg[data-preset=jev] .edge-label text { font:400 16px var(--sans); fill:var(--ink); }
+svg[data-preset=jev] .group-title { font:400 16px var(--sans); }
+svg[data-preset=jev] [data-node=n5] .node-name { font-weight:600; }
+/* Keep wide monospace labels intact without shrinking the other themes. */
 svg[data-preset=jev][data-card-theme=terminal] .node-name,
-svg[data-preset=jev][data-card-theme=terminal] .node-subtitle { font-size:14.5px; letter-spacing:-.3px; }
+svg[data-preset=jev][data-card-theme=terminal] .node-subtitle { font-size:15px; letter-spacing:-.4px; }

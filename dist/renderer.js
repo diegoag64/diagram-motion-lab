@@ -30,7 +30,9 @@ export class Renderer {
     this.nodes.clear();this.edges.clear();this.groups.clear();
     for(const group of graph.groups||[]) {
       const g=element('g',{class:`diagram-group ${group.focal?'focal':''}`,'data-group':group.id,role:'group','aria-label':group.label});
-      g.append(element('rect',{class:'group-box',rx:8}),element('text',{class:'group-eyebrow',x:24,y:22},group.eyebrow||'GROUP'),element('text',{class:'group-title',x:24,y:46},group.label));
+      g.append(element('rect',{class:'group-box',rx:8}));
+      if(group.eyebrow!=='')g.append(element('text',{class:'group-eyebrow',x:24,y:22},group.eyebrow??'GROUP'));
+      g.append(element('text',{class:'group-title',x:24,y:46},group.label));
       this.groupLayer.append(g);this.groups.set(group.id,g);
     }
     for(const e of graph.edges) {
@@ -49,7 +51,7 @@ export class Renderer {
       else {
         if(!this.readOnly){g.setAttribute('role','button');g.setAttribute('tabindex','0');g.setAttribute('aria-pressed',String(n.id===selected));}
         const {width,height}=nodeSize(n);
-        g.append(element('rect',{class:'selection-ring',x:-5,y:-5,width:width+10,height:height+10,rx:10}),element('rect',{class:'node-box',width,height,rx:6}),element('text',{class:'node-index',x:12,y:16},String(graph.nodes.slice(0,i+1).filter(n=>n.kind!=='junction').length).padStart(2,'0')),element('text',{class:'node-name','text-anchor':'middle'}),element('text',{class:'node-subtitle','text-anchor':'middle'}));
+        g.append(element('rect',{class:'selection-ring',x:-5,y:-5,width:width+10,height:height+10,rx:10}),element('rect',{class:'node-box',width,height,rx:6}),...(graph.showNodeNumbers===false?[]:[element('text',{class:'node-index',x:12,y:16},String(graph.nodes.slice(0,i+1).filter(n=>n.kind!=='junction').length).padStart(2,'0'))]),element('text',{class:'node-name','text-anchor':'middle'}),element('text',{class:'node-subtitle','text-anchor':'middle'}));
         if(!this.readOnly){g.addEventListener('click',()=>this.onSelect(n.id));g.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();this.onSelect(n.id);}});}
       }
       this.nodeLayer.append(g);this.nodes.set(n.id,g);this.updateLabel(n);
@@ -62,28 +64,28 @@ export class Renderer {
     const {width,height}=nodeSize(node),lines=node.subtitle.split('\n'),multiline=height>76;
     g.classList.toggle('multiline',multiline);
     const title=g.querySelector('.node-name'),detail=g.querySelector('.node-subtitle');
-    const lineHeight=multiline?21:16,total=20+lines.length*lineHeight,start=Math.max(35,(height-total)/2+15);
+    const reference=this.graph.preset==='jev',lineHeight=reference?24:multiline?21:16,total=reference?(lines.length+1)*lineHeight:20+lines.length*lineHeight,start=reference?(height-total)/2+18:Math.max(35,(height-total)/2+15);
     title.textContent=node.label;title.setAttribute('x',width/2);title.setAttribute('y',multiline?start:37);
-    detail.replaceChildren();lines.forEach((line,i)=>detail.append(element('tspan',{x:width/2,y:multiline?start+27+i*lineHeight:56+i*lineHeight},line)));
+    detail.replaceChildren();lines.forEach((line,i)=>detail.append(element('tspan',{x:width/2,y:multiline?start+(reference?24:27)+i*lineHeight:56+i*lineHeight},line)));
     g.setAttribute('aria-label',`${node.label}. ${node.subtitle.replaceAll('\n',', ')}.${this.readOnly?'':' Select to edit or grow branches.'}`);
     this.fitLabel(title,width-24);for(const line of detail.children)this.fitLabel(line,width-24);
   }
   fitLabel(text,width=132) {let shortened=text.textContent;while(text.getComputedTextLength()>width&&shortened.length>1){shortened=shortened.slice(0,-1);text.textContent=shortened+'…';}}
   updateGroups(positions,time) {
-    for(const group of this.graph.groups||[]){const box=groupBox(group,this.graph,positions),g=this.groups.get(group.id);g.setAttribute('transform',`translate(${box.x},${box.y})`);g.querySelector('rect').setAttribute('width',box.width);g.querySelector('rect').setAttribute('height',box.height);const birth=Math.min(...group.members.map(id=>this.graph.nodes.find(n=>n.id===id).born))-.5;const visible=this.reduced?1:smooth((time-birth)/.4);g.setAttribute('opacity',visible);g.setAttribute('aria-hidden',String(visible<.5));}
+    for(const group of this.graph.groups||[]){const box=groupBox(group,this.graph,positions),g=this.groups.get(group.id);g.setAttribute('transform',`translate(${box.x},${box.y})`);g.querySelector('rect').setAttribute('width',box.width);g.querySelector('rect').setAttribute('height',box.height);if(group.titleAlign==='center'){const title=g.querySelector('.group-title');title.setAttribute('x',box.width/2);title.setAttribute('y',30);title.setAttribute('text-anchor','middle');}const birth=Math.min(...group.members.map(id=>this.graph.nodes.find(n=>n.id===id).born))-.5;const visible=this.reduced?1:smooth((time-birth)/.4);g.setAttribute('opacity',visible);g.setAttribute('aria-hidden',String(visible<.5));}
   }
   positionEdgeLabels(positions) {
     for(const e of this.graph.edges){const label=this.edges.get(e.id).label;if(!label)continue;const midpoint=bezierPoint(connectionGeometry(this.graph,positions,e,this.vertical).points,.5),w=label.querySelector('text').getComputedTextLength()+16;label.setAttribute('transform',`translate(${midpoint.x+(this.vertical?w/2+10:0)},${midpoint.y+(this.vertical?0:-16)})`);const mask=label.querySelector('rect');mask.setAttribute('x',-w/2);mask.setAttribute('y',-10);mask.setAttribute('width',w);mask.setAttribute('height',20);}
   }
   fit(readable=true) {
     if(!this.targets.size)return;
-    const box=sceneBounds(this.graph,this.targets,this.vertical),w=this.svg.clientWidth,h=this.svg.clientHeight;
+    const box=sceneBounds(this.graph,this.targets,this.vertical),{width:w,height:h}=this.svg.getBoundingClientRect();
     let scale=Math.min(w/box.width,h/box.height,1.15);
     if(this.vertical&&readable&&scale<.9){scale=.9;const node=this.graph.nodes.find(n=>n.id===this.selected)||this.graph.nodes[0],p=this.targets.get(node.id);this.camera={x:this.graph.layoutMode==='authored'?box.x+box.width/2-w/scale/2:p.x+nodeSize(node).width/2-w/scale/2,y:Math.max(box.y,p.y-90),scale};}
     else this.camera={x:box.x+box.width/2-w/scale/2,y:box.y+box.height/2-h/scale/2,scale};this.applyCamera();
   }
-  zoom(factor) {const w=this.svg.clientWidth,h=this.svg.clientHeight,old=this.camera.scale,next=clamp(old*factor,.2,2.5);this.camera.x+=w/old/2-w/next/2;this.camera.y+=h/old/2-h/next/2;this.camera.scale=next;this.applyCamera();}
-  applyCamera() {const {x,y,scale}=this.camera;this.svg.setAttribute('viewBox',`${x} ${y} ${this.svg.clientWidth/scale} ${this.svg.clientHeight/scale}`);this.onZoom(Math.round(scale*100));}
+  zoom(factor) {const {width:w,height:h}=this.svg.getBoundingClientRect(),old=this.camera.scale,next=clamp(old*factor,.2,2.5);this.camera.x+=w/old/2-w/next/2;this.camera.y+=h/old/2-h/next/2;this.camera.scale=next;this.applyCamera();}
+  applyCamera() {const {x,y,scale}=this.camera,{width,height}=this.svg.getBoundingClientRect();this.svg.setAttribute('viewBox',`${x} ${y} ${width/scale} ${height/scale}`);this.onZoom(Math.round(scale*100));}
   render(time,flowTime,mode,flowEnabled,now=performance.now()) {
     if(!this.graph)return;
     const progress=this.reduced?1:smooth((now-this.layoutStart)/700),nodeMap=new Map(this.graph.nodes.map(n=>[n.id,n]));
