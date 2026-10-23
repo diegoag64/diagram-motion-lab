@@ -286,7 +286,7 @@ export function ScenarioResult({ run }: { run: RunState }) {
       aria-busy={run.status === "pending"}
     >
       <div className="result-section-label">
-        <span>02 / APPLICATION RESULT</span>
+        <span>APPLICATION RESULT</span>
         <span role="status">
           {run.status === "idle"
             ? "Waiting for a request"

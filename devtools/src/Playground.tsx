@@ -3,6 +3,15 @@ import { createRoot } from "react-dom/client";
 import { JevDevtools } from "./index";
 import { ScenarioResult, type RunState } from "./ScenarioResult";
 import { sampleProfiles, type SampleProfile } from "./sample-profiles";
+import { Button } from "./components/ui/button";
+import {
+  NativeSelect,
+  NativeSelectOption,
+} from "./components/ui/native-select";
+import { Textarea } from "./components/ui/textarea";
+import { Label } from "./components/ui/label";
+import { ArrowRight, LoaderCircle } from "lucide-react";
+import "./controls.css";
 import "./inspector.css";
 import "./style.css";
 
@@ -93,71 +102,64 @@ function App() {
   }
   return (
     <>
-      <main className="playground">
-        <header className="page-header">
-          <a href="http://127.0.0.1:4178/">Diagram Motion Lab</a>
-          <span>LOCAL PROTOTYPE</span>
-        </header>
-        <div className="playground-grid">
-          <div>
-            <span className="eyebrow">Developer tools / Jev</span>
-            <h1>
-              See the question.
-              <br />
-              <em>Follow the answer.</em>
-            </h1>
-            <p>
-              Inspect a request from shared context to typed results.
-              <br />
-              Powered by the real TypeSafe SDK.
-            </p>
-          </div>
-          <section className="run-form" aria-label="Request playground">
-            <div className="form-row">
-              <label>
-                Scenario
-                <select
-                  value={scenario}
-                  disabled={!!runId}
-                  onChange={(e) => {
-                    setScenario(e.target.value);
-                    resetOutcome();
-                    if (["retry", "error"].includes(e.target.value))
-                      setMode("sample");
-                  }}
+      <main className="playground dark">
+        <section className="run-form" aria-label="Request playground">
+          <div className="form-row">
+            <div className="form-field scenario-field">
+              <Label htmlFor="scenario">Scenario</Label>
+              <NativeSelect
+                id="scenario"
+                className="w-full"
+                value={scenario}
+                disabled={!!runId}
+                onChange={(e) => {
+                  setScenario(e.target.value);
+                  resetOutcome();
+                  if (["retry", "error"].includes(e.target.value))
+                    setMode("sample");
+                }}
+              >
+                <NativeSelectOption value="triage">
+                  Support triage · Choice, Score, Noul
+                </NativeSelectOption>
+                <NativeSelectOption value="image">
+                  Locate a mug · Box, Noul
+                </NativeSelectOption>
+                <NativeSelectOption value="retry">
+                  Rate limit → retry
+                </NativeSelectOption>
+                <NativeSelectOption value="error">
+                  Failed request
+                </NativeSelectOption>
+              </NativeSelect>
+            </div>
+            <div className="form-field">
+              <Label htmlFor="transport">Transport</Label>
+              <NativeSelect
+                id="transport"
+                className="w-full"
+                value={mode}
+                disabled={!!runId}
+                onChange={(e) => {
+                  setMode(e.target.value);
+                  resetOutcome();
+                }}
+              >
+                <NativeSelectOption value="sample">Sample</NativeSelectOption>
+                <NativeSelectOption
+                  value="live"
+                  disabled={!live || ["retry", "error"].includes(scenario)}
                 >
-                  <option value="triage">
-                    Support triage · Choice, Score, Noul
-                  </option>
-                  <option value="image">Locate a mug · Box, Noul</option>
-                  <option value="retry">Rate limit → retry</option>
-                  <option value="error">Failed request</option>
-                </select>
-              </label>
-              <label>
-                Transport
-                <select
-                  value={mode}
-                  disabled={!!runId}
-                  onChange={(e) => {
-                    setMode(e.target.value);
-                    resetOutcome();
-                  }}
-                >
-                  <option value="sample">Sample</option>
-                  <option
-                    value="live"
-                    disabled={!live || ["retry", "error"].includes(scenario)}
-                  >
-                    Live{!live ? " · no server key" : ""}
-                  </option>
-                </select>
-              </label>
+                  Live{!live ? " · no server key" : ""}
+                </NativeSelectOption>
+              </NativeSelect>
             </div>
             {mode === "sample" && scenario !== "image" && (
-              <label className="fixture-picker">
-                Sample outcome
-                <select
+              <div className="form-field">
+                <Label htmlFor="sample-outcome">Sample outcome</Label>
+                <NativeSelect
+                  id="sample-outcome"
+                  className="w-full"
                   value={profile}
                   disabled={!!runId}
                   onChange={(e) => {
@@ -168,68 +170,77 @@ function App() {
                   }}
                 >
                   {Object.entries(sampleProfiles).map(([key, fixture]) => (
-                    <option key={key} value={key}>
+                    <NativeSelectOption key={key} value={key}>
                       {fixture.label}
-                    </option>
+                    </NativeSelectOption>
                   ))}
-                </select>
-              </label>
-            )}
-            {scenario === "image" ? (
-              <div className="image-input">
-                <img
-                  src="/mug.png"
-                  alt="Sample illustration of a pink mug and a book"
-                />
-                <p>Find the mug and estimate whether a mug is present.</p>
+                </NativeSelect>
               </div>
-            ) : (
-              <label>
-                Context
-                <textarea
-                  disabled={!!runId}
-                  maxLength={8000}
-                  value={message}
-                  onChange={(e) => {
-                    setMessage(e.target.value);
-                    resetOutcome();
-                  }}
-                />
-              </label>
             )}
-            <div className="run-actions">
-              <button
-                className="primary"
-                disabled={!!runId}
-                onClick={() => void run()}
-              >
-                {runId
-                  ? "Running…"
-                  : mode === "sample"
-                    ? "Run sample →"
-                    : "Run live query →"}
-              </button>
-              {runId && (
-                <button
-                  onClick={() =>
-                    void post("cancel", { runId }).catch((e) =>
-                      setFeedback(e.message),
-                    )
-                  }
-                >
-                  Cancel
-                </button>
-              )}
-              <span role="status">{feedback}</span>
+          </div>
+          {scenario === "image" ? (
+            <div className="image-input">
+              <img
+                src="/mug.png"
+                alt="Sample illustration of a pink mug and a book"
+              />
+              <p>Find the mug and estimate whether a mug is present.</p>
             </div>
-            <p className="sample-note">
-              {mode === "sample"
-                ? "Fixed sample answers, including when you edit context. No external API calls."
-                : "Live inference uses your server key and may incur API charges."}
-            </p>
-          </section>
-        </div>
-        <ScenarioResult run={outcome} />
+          ) : (
+            <div className="form-field context-field">
+              <Label htmlFor="context">Context</Label>
+              <Textarea
+                id="context"
+                className="min-h-32 resize-y"
+                disabled={!!runId}
+                maxLength={8000}
+                value={message}
+                aria-describedby="sample-note"
+                onChange={(e) => {
+                  setMessage(e.target.value);
+                  resetOutcome();
+                }}
+              />
+            </div>
+          )}
+          <div className="run-actions">
+            <Button disabled={!!runId} onClick={() => void run()}>
+              {runId ? (
+                <>
+                  <LoaderCircle
+                    className="motion-safe:animate-spin"
+                    aria-hidden="true"
+                  />{" "}
+                  Running…
+                </>
+              ) : (
+                <>
+                  {mode === "sample" ? "Run sample" : "Run live query"}
+                  <ArrowRight aria-hidden="true" />
+                </>
+              )}
+            </Button>
+            {runId && (
+              <Button
+                variant="outline"
+                onClick={() =>
+                  void post("cancel", { runId }).catch((e) =>
+                    setFeedback(e.message),
+                  )
+                }
+              >
+                Cancel
+              </Button>
+            )}
+            <span role="status">{feedback}</span>
+          </div>
+          <p id="sample-note" className="sample-note">
+            {mode === "sample"
+              ? "Fixed sample answers, including when you edit context. No external API calls."
+              : "Live inference uses your server key and may incur API charges."}
+          </p>
+        </section>
+        {outcome.status !== "idle" && <ScenarioResult run={outcome} />}
       </main>
       <JevDevtools
         enabled={import.meta.env.DEV}

@@ -113,7 +113,7 @@ The recorder preserves the original SDK APIPromise, including response helpers a
 npm run dev:devtools
 ```
 
-Open **http://127.0.0.1:4182/**. The original lab and unlisted `/docs/` remain on 4178. The playground uses the same public component and adapter described above. Its drawer starts closed so the application result remains visible; open **Jev DevTools** in the bottom-right corner to inspect the request.
+Open **http://127.0.0.1:4182/**. The original lab and unlisted `/docs/` remain on 4178. The playground uses the same public component and adapter described above. Its minimal form uses shadcn Button, Native Select, Textarea, and Label components; the top bar and hero are omitted, and application results appear after a run. Its drawer starts closed so the application result remains visible; open **Jev DevTools** in the bottom-right corner to inspect the request.
 
 Samples cover triage (Choice, Score, Noul), image regions (Box + Noul), retry after 429, failure, and cancellation. Choose a sample outcome (blocked payment, delayed delivery, or quick question) to compare different fixture responses. Sample answers and usage are fixed by that selection, even if the context changes. They use the real SDK's serialization/retry paths with a custom fetch and make no inference calls.
 
@@ -148,3 +148,5 @@ npm --prefix devtools run verify:package
 Package verification packs the library, installs it into a temporary independent React app, verifies public exports and SSR/disabled behavior, and builds the consumer while asserting that no server recorder or SDK modules enter the browser bundle. Recorder and adapter tests cover response ownership, retries, error/abort, concurrent scopes, redaction, bounded retention, image capture, HTTP/SSE delivery, origin/auth guards, and scoped clearing.
 
 Package exports: `@diagram-motion-lab/jev-devtools` (React + browser-safe types), `/styles.css` (scoped styles), and `/server` (Node adapter + recorder). Library output is `lib/`; the playground's production build is separate and intentionally shows only a local-tool notice. No production deployment is included.
+
+The playground controls live in `src/components/ui/` and are generated from [shadcn/ui](https://ui.shadcn.com/docs/installation/vite), with direct Radix imports and the local `cn` helper. `components.json` configures future additions. Tailwind utilities and theme tokens are in `src/controls.css`; global preflight is omitted to preserve inspector styling. These dependencies are development-only and are not needed by consumers of the packaged inspector.
